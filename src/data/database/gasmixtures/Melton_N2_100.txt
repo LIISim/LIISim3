@@ -1,0 +1,5 @@
+Melton-Nitrogen-100%;GasMixture;0.0;H. A. Michelsen, F. Liu, B. F. Kock, H. Bladh, A. Boiarciuc, M. Charwath, T. Dreier, R. Hadef, M. Hofmann, J. Reimann, S. Will, P. E. Bengtsson, H. Bockhorn, F. Foucher, K. P. Geigle, C. Mouna?m-Rousselle, C. Schulz, R. Stirn, B. Tribalet, and R. Suntz, "Modeling laser-induced incandescence of soot: a summary and comparison of LII models," Appl. Phys. B 87, 503-521 (2007).;
+L;poly;0;2.355e-10;0;0;0;0;0;0;0;no source;
+gamma_eqn;notSet;0;0;0;0;0;0;0;0;0;notSet;
+gas_component;gases/Nitrogen_Melton.txt;1;
+therm_cond;const;0.1068;0;0;0;0;0;0;0;0;no source;

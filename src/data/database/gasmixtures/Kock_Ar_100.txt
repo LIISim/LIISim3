@@ -1,0 +1,5 @@
+Kock-Argon-100%;GasMixture;1.0;no description;
+L;notSet;0;0;0;0;0;0;0;0;0;notSet;
+gamma_eqn;notSet;0;0;0;0;0;0;0;0;0;notSet;
+gas_component;gases/Argon_Kock.txt;1;
+therm_cond;notSet;0;0;0;0;0;0;0;0;0;notSet;

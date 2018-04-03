@@ -1,0 +1,13 @@
+/* MinimizableWidget */
+
+/* lighter gray value as default bgcolor */
+QToolBar#toolbarMinimizableWidget {
+	/* background-color:  #C0C0C0; */
+  font-weight: bold;
+  padding: 0px;
+}
+
+QLabel#labelMinimizableWidget {	
+  font-weight: bold;
+  padding-top: 2px;	
+}

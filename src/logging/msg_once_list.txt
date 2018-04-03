@@ -1,0 +1,62 @@
+
+-------------------------------------------------------------
+		Overview MSG_ONCE groups
+-------------------------------------------------------------
+This file is manually updated to keep the overview 
+
+Please add future messages according the following scheme:
+<group>
+	- <description>
+	- Used by:
+		<class>::<function>
+	- Group Reset:
+		<class>::<function>
+    
+Usage:
+  MSG_ONCE("NAME OF ERROR MESSAGE", index, msg, ERR);      
+    
+-------------------------------------------------------------
+RESET ALL:
+NotificationCenter::resetCount() -> MSG_ONCE_RESET_ALL
+          
+-------------------------------------------------------------
+
+"SpectroscopicMaterial"
+	- Messages related to the current SpectroscopicMaterial
+  
+	- Used by (ID):
+		1: Temperature::calcDrudeEm()     (parameters not in Material)
+    2X: Temperature::checkEmSource()  (Em values for channel X)
+    3: Temperature::checkEmSource()   (Em function)
+    4: Temperature::checkEmSource()   (Em Drude theory)
+    
+    
+	- Reset GROUP in:
+    SignalManager::processSignals()
+		MaterialComboBox::onCurrentIndexChanged()
+		DatabaseManager::slot_scanDatabase()
+		
+    
+"DebugTemperature"
+  - Messages for debugging in Temperature class
+  
+  - Used by int(wavelength)
+    XXX: Temperature: getEmBySource()
+    
+    
+"HTM_checkAvailability"
+  - HeatTransferModel checks, if variables are available for selected database
+  
+  - Used by (ID):
+    1: HeatTransferModel::checkAvailability() (empty variable list) 
+    2: HeatTransferModel::checkAvailability() (variable not available)         
+
+  - Reset GROUP in:
+    FitCreator::onFitButtonReleased()
+    FitCreator::onSimButtonReleased()
+    
+    
+"AToolCalibrationOnlyFirstMPoint"
+  - Warning, that only the first MPoint is used
+  
+  - No reset

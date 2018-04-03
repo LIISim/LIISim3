@@ -1,0 +1,52 @@
+
+
+/* use this to identify Styles that are overwritten by individual styles (for example RibbonToolbar)       */
+/* QWidget{ background-color: blue; } */ 
+
+
+
+QRadioButton::indicator{
+  width: 15px;
+  height: 15px;
+}
+
+QCheckBox::indicator{
+  width: 15px;
+  height: 15px;
+}
+
+
+/**
+* 	TOOLBUTTON APPEARANCE
+*/
+
+
+QToolButton {
+        /* increase alpha value to enhance borders */
+        border: 0.5px solid rgba(0, 0, 0, 30);
+         /* set transparent background */
+        background-color: rgba(0, 0, 0, 0);  
+        margin: 1px;
+}
+
+QToolButton:hover{
+        /* transparent white overlay */
+       
+        background-color: rgba(0, 0, 0, 10);
+}
+
+QToolButton:pressed {
+    background-color: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1,
+                                      stop: 0 #dadbde, stop: 1 #f6f7fa);
+}
+
+QToolButton:on{
+        /* transparent black overlay */
+        background-color: rgba(0, 0, 0, 40);
+}
+
+
+
+QToolButton#SignalProcessing_RTB_PlotOptions {
+        border: 0.5px solid rgba(0, 0, 0, 30);
+}

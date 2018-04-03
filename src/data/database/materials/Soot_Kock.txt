@@ -1,0 +1,13 @@
+Soot_Kock;Material;1.0;Michelsen et al.- Appl. Phys. B 87, 503-521 (2007).;
+C_p_mol;poly2;22.5566;0.0013;0;0;0;-1.8195e+06;0;0;0;no source;
+Em_func;optics_lambda;1;0;0;0;0;0;0;0;0;no source;
+T_v_ref;const;3000;0;0;0;0;0;0;0;0;no source;
+alpha_T_eff;const;0.23;0;0;0;0;0;0;0;0;no source;
+eps;const;1;0;0;0;0;0;0;0;0;no source;
+H_v;const;790776.6;0;0;0;0;0;0;0;0;no source;
+molar_mass;const;0.012011;0;0;0;0;0;0;0;0;no source;
+molar_mass_v;const;0.036033;0;0;0;0;0;0;0;0;no source;
+p_v;notSet;0;0;0;0;0;0;0;0;0;notSet;
+p_v_ref;const;61.5;0;0;0;0;0;0;0;0;no source;
+rho_p;const;1860;0;0;0;0;0;0;0;0;no source;
+theta_e;const;1;0;0;0;0;0;0;0;0;-;

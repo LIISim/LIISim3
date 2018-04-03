@@ -1,0 +1,6 @@
+Kock-Nitrogen-100%;GasMixture;1.0;no description;
+L;poly;0;2.355e-10;0;0;0;0;0;0;0;Melton model (Appl. Opt. 23, 2201 (1984)) - Air/1atm
+;
+gamma_eqn;notSet;0;0;0;0;0;0;0;0;0;notSet;
+gas_component;gases/Nitrogen_Kock.txt;1;
+therm_cond;const;0.1;0;0;0;0;0;0;0;0;Michelsen et al.(Appl. Phys. B 97, 503-521 (2007)) - comparison Melton model;

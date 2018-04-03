@@ -1,0 +1,26 @@
+Blackbody_Particle;Material;1.0;no description;
+C_p_mol;poly;22.5567;0.00129959;0;0;0;-1.81955e+06;0;0;0;[J/mol/K];
+Em;optics_temp;390;1;0;0;0;0;0;0;0;no source;
+Em;optics_temp;442;1;0;0;0;0;0;0;0;no source;
+Em;optics_temp;445;1;0;0;0;0;0;0;0;no source;
+Em;optics_temp;452;1;0;0;0;0;0;0;0;no source;
+Em;optics_temp;500;1;0;0;0;0;0;0;0;no source;
+Em;optics_temp;558;1;0;0;0;0;0;0;0;no source;
+Em;optics_temp;682;1;0;0;0;0;0;0;0;no source;
+Em;optics_temp;684;1;0;0;0;0;0;0;0;no source;
+Em;optics_temp;692;1;0;0;0;0;0;0;0;no source;
+Em;optics_temp;716;1;0;0;0;0;0;0;0;no source;
+Em;optics_temp;797;1;0;0;0;0;0;0;0;no source;
+Em;optics_temp;800;1;0;0;0;0;0;0;0;no source;
+Em;optics_temp;855;1;0;0;0;0;0;0;0;no source;
+Em_func;optics_lambda;1;0;0;0;0;0;0;0;0;no source;
+T_v_ref;const;3000;0;0;0;0;0;0;0;0;no source;
+alpha_T;const;0.28;0;0;0;0;0;0;0;0;no source;
+eps;const;1;0;0;0;0;0;0;0;0;no source;
+h_v;const;2.19459e+07;0;0;0;0;0;0;0;0;no source;
+molar_mass;const;0.012011;0;0;0;0;0;0;0;0;no source;
+molar_mass_v;const;0.036033;0;0;0;0;0;0;0;0;no source;
+p_v;exppoly;0;1E5;-198.11;0.20732;-9.6899e-05;2.3826e-08;-2.9423e-12;1.4363e-16;0;Michelsen et al. 2008 (DOI:10.1007/s00340-008-3181-5) Table 2
+p_v_ref;const;61.5;0;0;0;0;0;0;0;0;no source;
+rho_p;const;2303.1;0;0;0;0;0;0;0;0;no source;
+theta_e;const;1.0;0;0;0;0;0;0;0;0;-;

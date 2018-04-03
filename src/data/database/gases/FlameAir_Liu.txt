@@ -1,0 +1,3 @@
+FlameAir_Liu;Gas;0.0;Properties of flame air mixture;
+C_p_mol;notSet;0;0;0;0;0;0;0;0;0;notSet;
+molar_mass;const;0.02874;0;0;0;0;0;0;0;0;notSet;

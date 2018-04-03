@@ -1,0 +1,3 @@
+Nitrogen_Kock;Gas;0.0;Kock (PhD thesis 2006);
+C_p_mol;poly2;28.58;0.00377;0;0;0;-50000;0;0;0;Table A.3;
+molar_mass;const;0.028014;0;0;0;0;0;0;0;0;Table A.3;

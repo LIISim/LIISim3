@@ -1,0 +1,4 @@
+Goulay2013;LIISettings;1.0;experimental setup used for validation data experiments;
+channel;452;9;1;500;1;0;
+channel;682;10;1;500;1;0;
+channel;855;36;1;500;1;0;

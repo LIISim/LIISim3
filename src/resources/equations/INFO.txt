@@ -1,0 +1,7 @@
+----------------------------------
+Equations created with WirisEditor
+----------------------------------
+Copy paste formula from Microsoft Equation Editor to the form on:
+
+http://www.wiris.com/editor/demo/de/mathml-latex
+

@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html>
+<body>
+
+<h3>CSV automatic file import</h3>
+
+Scans the selected directory (and subdirectories if choosen) for *.csv files containing multiple signals. <br>
+The first line of the table should represent the time.
+<br><br>
+<b>Usage:</b><br>
+- Select the directory which should be scanned via the 'Choose Directory' button. <br>
+- Choose the other options according to your file composition. <br>
+- Press 'Scan Files' to get a list of files matching the file name scheme.<br>
+- Check the files which should be imported and press 'Import'.<br>
+
+<p><b>Caution: Requirements on filenames</b></p> 
+The filenames should have the following structure: <br><br>
+<i> Runame.SignalType.Tag3.ChannelID.csv </i><br><br>
+<i> Runname: </i> Name of the measurement run <br>
+<i> SignalType: </i>   <i> Absolute </i>  or <i> Signal </i> (raw signal data?) <br>
+<i> Tag3: </i> Ignored <br>
+<i> ChannelID: </i> <i> Ch1 </i> or <i> Ch2 </i> or <i> Ch3 </i> etc... <br><br>
+
+Example: <br>
+<i>Run01.Absolute.Intensity.Ch1.csv</i> <br>
+<i>Run01.Signal.Volts.Ch1.csv</i><br>
+
+</body>
+</html>

@@ -1,0 +1,13 @@
+Soot_Melton(Workshop);Material;0.0;Michelsen et al.- Appl. Phys. B 87, 503-521 (2007).;
+C_p_mol;const;22.8;0;0;0;0;0;0;0;0;calculated from specific heat capacity c_s*Mp;
+Em_func;const;1;0;0;0;0;0;0;0;0;constant for all wavelengths;
+H_v;const;778000;0;0;0;0;0;0;0;0;-;
+T_v_ref;const;3915;0;0;0;0;0;0;0;0;no source;
+alpha_T_eff;const;0.3;0;0;0;0;0;0;0;0;-;
+eps;notSet;0;0;0;0;0;0;0;0;0;notSet;
+molar_mass;const;0.012;0;0;0;0;0;0;0;0;C, original unit: g/mol;
+molar_mass_v;const;0.036;0;0;0;0;0;0;0;0;C3 species, original unit: g/mol;
+p_v;notSet;0;0;0;0;0;0;0;0;0;notSet;
+p_v_ref;const;100000;0;0;0;0;0;0;0;0;original unit: bar;
+rho_p;const;2260;0;0;0;0;0;0;0;0;original unit g/cm^3;
+theta_e;const;1;0;0;0;0;0;0;0;0;-;

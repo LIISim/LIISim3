@@ -1,0 +1,5 @@
+Liu-Flame;GasMixture;0.0;Tabulated values (Table 1 - Flame Mixture) for heat capacity ratio (Appl. Phys. B 83, 355-382 (2006));
+L;notSet;0;0;0;0;0;0;0;0;0;notSet;
+gamma_eqn;poly;1.42212;-0.00018636;8.07839e-08;-1.64251e-11;1.275e-15;0;0;0;0;Flame mixture;
+gas_component;gases/FlameAir_Liu.txt;1;
+therm_cond;notSet;0;0;0;0;0;0;0;0;0;notSet;

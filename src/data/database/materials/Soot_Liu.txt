@@ -1,0 +1,13 @@
+Soot_Liu;Material;0.0;Michelsen et al.- Appl. Phys. B 87, 503-521 (2007).;
+C_p_mol;poly;3.54288;0.0355694;-2.55018e-05;9.83713e-09;-2.10385e-12;2.35752e-16;-1.07879e-20;0;0;valid for 1200 K to 5500K;
+Em_func;optics_lambda;0.4;0;0;0;0;0;0;0;0;Snelling et al. Combustion and Flame 136, 180-190 (2004);
+H_v;poly;205398;736.6;-0.40713;0.00011992;-1.7946e-08;1.0717e-12;0;0;0;-;
+T_v_ref;notSet;0;0;0;0;0;0;0;0;0;notSet;
+alpha_T_eff;const;0.37;0;0;0;0;0;0;0;0;Snelling et al. Combustion and Flame 136, 180-190 (2004);
+eps;const;0.4;0;0;0;0;0;0;0;0;Snelling et al. Combustion and Flame 136, 180-190 (2004);
+molar_mass;const;0.012011;0;0;0;0;0;0;0;0;atomic carbon;
+molar_mass_v;poly;17.179E-3;6.8654E-7;2.9962E-9;-8.5954E-13;1.0486E-16;0;0;0;0;from fits to data of Leider et al. Carbon 11, 555-563 (1973);
+p_v;exppoly;0;101325;-122.96;0.090558;-2.7637e-05;4.1754e-09;-2.4875e-13;0;0;from fits to data of Leider et al. Carbon 11, 555-563 (1973), original unit [atm];
+p_v_ref;notSet;0;0;0;0;0;0;0;0;0;notSet;
+rho_p;const;1900;0;0;0;0;0;0;0;0;Liu et al. Appl. Phys. B 83, 355-382 (2006);
+theta_e;const;0.77;0;0;0;0;0;0;0;0;Hoffman and Rigby, AIAA journal 29, 927-931 (1991);

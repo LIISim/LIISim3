@@ -1,0 +1,2 @@
+Soot_Goulay;Material;1.0;Optical properties for validation data set;
+Em_func;optics_exp;3.3333;0.83;0;0;0;0;0;Eq (19) beta = 28.72 cm^-0.17 = 62.83 m^-0.17;

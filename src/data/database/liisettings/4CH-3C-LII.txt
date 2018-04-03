@@ -1,0 +1,12 @@
+4CH-3C-LII;LIISettings;0.1;4 channel three color device - ND filter from ocean optics 2017-01-06;
+laser_wavelength;1064;notSet;
+channel;500;26;2.13457;0.45;7.98878;0;1;
+channel;500;26;2.76227;0.45;8.68698;0;2;
+channel;684;26;1;0.45;8.44551;0;3;
+channel;797;18;1.52628;0.45;8.19615;0;4;
+filter;10;8.41;8.41;9.77;10.57;;
+filter;50;47.55;47.55;50.5;50.94;;
+filter;79;81;81;83.41;84.86;;
+filter;ND10;8.41;8.41;9.77;10.57;;
+filter;ND50;47.55;47.55;50.5;50.94;;
+filter;ND79;81;81;83.41;84.86;;

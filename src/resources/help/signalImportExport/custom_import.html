@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html>
+<body>
+
+<h3>Custom Import (MSExcel: Unicode .txt)</h3>
+
+The custom file import scans a directory for files with the extension '*.txt', '*.dat' or '*.csv', with the filename matching the pattern preset.
+The data delimiter, decimal mark and time unit can be choosen by the user.<br>
+
+<h3><b>1) Data format</b></h3>
+The signal data can be either arranged in one file in multiple columns or spread over multiple files. If you like to use the single file version, the data should be composed as described below:<br> 
+<br>
+- <b>first column:</b> time data<br>
+- <b>second column:</b> signal data (Channel 1)<br>
+- <b>third column:</b> signal data (Channel 2)<br>
+- <b>fourth column:</b> signal data (Channel 3)<br>
+- ... <br>
+<br>
+<i>Example:</i>
+<br>
+<code>
+<table>
+
+<tr>
+  <th scope="col">Time</th>
+  <th scope="col">Channel 1</th>
+  <th scope="col">Channel 2</th>
+  <th scope="col">...</th>
+</tr>
+<tr>
+  <td>6e-009</td>
+  <td>0.0202528</td>
+  <td>0.0212294</td>
+</tr>
+<tr>
+  <td>8e-009</td>
+  <td>0.0196180</td>
+  <td>0.0212294</td>
+</tr>
+<tr>
+  <td>1e-008</td>
+  <td>0.0208387</td>
+  <td>0.0212294</td>
+</tr>
+<tr>
+  <td>1.2e-008</td>
+  <td>0.0195692</td>
+  <td>0.0212294</td>
+</tr>
+<tr>
+  <td>...</td>
+</tr>
+
+</table>
+</code>
+<br>
+<br>
+
+If you would like the multi-file version, you should select the <b>'Only one channel per file'</b>-checkbox. 
+The filename should contain a number identifying the channel and the file name pattern the <b>&lt;CHANNEL&gt;</b>, otherwise this will result in an error. 
+The data inside the file should be composed as follows:<br>
+<br>
+- <b>first column:</b> time data<br>
+- <b>second column:</b> signal data<br>
+<br>
+
+<i>Example:</i><br>
+<code>
+<table>
+
+<tr>
+  <th scope="col">Time</th>
+  <th scope="col">Signal Data</th>
+</tr>
+<tr>
+  <td>6e-009</td>
+  <td>0.0202528</td>
+</tr>
+<tr>
+  <td>8e-009</td>
+  <td>0.0196180</td>
+</tr>
+<tr>
+  <td>1e-008</td>
+  <td>0.0208387</td>
+</tr>
+<tr>
+  <td>1.2e-008</td>
+  <td>0.0195692</td>
+</tr>
+<tr>
+  <td>...</td>
+</tr>
+</table>
+</code>
+<br>
+<br>
+A series of signals can be imported using the <b>&lt;SIGNAL&gt;</b> identifier. The filename should in this case contain a ascending number used to define the signal number, e.g: <br>
+signal_<font color="red">0001</font>.txt<br>
+signal_<font color="red">1</font>.txt<br>
+…<br>
+
+<h3><b>2) Filename Example</b></h3>
+
+Filename: FirstTest_1_01_ABC.txt<br>
+<br>
+Filename pattern: &lt;RUN&gt; _ &lt;CHANNEL&gt; _ &lt;SIGNAL&gt; _ABC .txt<br>
+
+<code>
+<table>
+
+<tr>
+  <th scope="col">Element in filename</th>
+  <th scope="col">Corresponding element in filename pattern</th>
+  <th scope="col">Info</th>
+</tr>
+<tr>
+  <td>FirstTest</td>
+  <td>&lt;RUN&gt;</td>
+  <td>Will be used as name</td>
+</tr>
+<tr>
+  <td><font color="red">_</font></td>
+  <td><font color="red">_</font></td>
+  <td><font color="red">Ignored</font></td>
+</tr>
+<tr>
+  <td>1</td>
+  <td>&lt;CHANNEL&gt;</td>
+  <td>Channel identifier, if multiple files are used</td>
+</tr>
+<tr>
+  <td><font color="red">_</font></td>
+  <td><font color="red">_</font></td>
+  <td><font color="red">Ignored</font></td>
+</tr>
+<tr>
+  <td>01</td>
+  <td>&lt;SIGNAL&gt;</td>
+  <td>Signal series identifier</td>
+</tr>
+<tr>
+  <td><font color="red">_ABC</font></td>
+  <td><font color="red">_ABC</font></td>
+  <td><font color="red">Ignored</font></td>
+</tr>
+<tr>
+  <td>.txt</td>
+  <td>.txt</td>
+  <td></td>
+</tr>
+</table>
+</code>
+<br>
+
+<h3><b>3) MRun Settings</b></h3>
+Settings for the run are saved in a file named <i>&lt;RUN&gt;_settings.txt</i>. 
+If this file is available for a run, it will be automatically loaded when a valid file (according to the pattern) is detected.<br>
+
+<h3><b>4) Further Documentation</b></h3>
+Please see the User Guide for detailed information of all import functionalities.
+
+<br>
+</body>
+</html>
+

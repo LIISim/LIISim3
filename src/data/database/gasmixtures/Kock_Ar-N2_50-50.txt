@@ -1,0 +1,6 @@
+Kock-Ar/N2-50/50%;GasMixture;1.0;Standard properties;
+L;notSet;0;0;0;0;0;0;0;0;0;notSet;
+gamma_eqn;notSet;0;0;0;0;0;0;0;0;0;notSet;
+gas_component;gases/Argon_Kock.txt;0.5;
+gas_component;gases/Nitrogen_Kock.txt;0.5;
+therm_cond;notSet;0;0;0;0;0;0;0;0;0;notSet;

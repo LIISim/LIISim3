@@ -1,0 +1,3 @@
+<math xmlns="http://www.w3.org/1998/Math/MathML">
+<mi>f</mi><mfenced separators="|"><mi>T</mi></mfenced>
+<mo>=</mo><munderover><mrow><mo>&#x2211;</mo><msub><mi>a</mi><mi>i</mi></msub><msup><mi>T</mi><mi>i</mi></msup></mrow><mrow><mi>i</mi><mo>=</mo><mn>0</mn></mrow><mn>8</mn></munderover></math>
