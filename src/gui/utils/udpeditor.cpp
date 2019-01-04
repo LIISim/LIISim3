@@ -154,6 +154,7 @@ void UDPEditor::accept()
     }
 
     currentMRun->userDefinedParameters = parameters;
+    currentMRun->setUDPChanged();
 
     QDialog::accept();
 }

@@ -11,6 +11,7 @@
 
 #include <QDesktopServices>
 #include <QFileDialog>
+#include <QMessageBox>
 #include "../../core.h"
 
 DatabaseEditor::DatabaseEditor(QWidget *parent) :  QWidget(parent)
@@ -138,6 +139,28 @@ void DatabaseEditor::setDatabaseManager(DatabaseManager *dbm)
 }
 
 
+bool DatabaseEditor::hasUnsavedChanges()
+{
+    if(gasEdit->hasUnsavedChanges())
+        return true;
+    if(matEdit->hasUnsavedChanges())
+        return true;
+    if(gasmixEdit->hasUnsavedChanges())
+        return true;
+    if(liisettEdit->hasUnsavedChanges())
+        return true;
+#ifdef LIISIM_FULL
+    if(laserEnergyEdit->hasUnsavedChanges())
+        return true;
+    if(spectrumEditor->hasUnsavedChanges())
+        return true;
+    if(transmissionEditor->hasUnsavedChanges())
+        return true;
+#endif
+    return false;
+}
+
+
 /**
  * @brief handle database scan
  */
@@ -152,7 +175,6 @@ void DatabaseEditor::slot_startDbScan()
     Core::instance()->generalSettings->setDatabaseDirectory(lbDbPath->text());
 
     emit signal_requestDbScan();
-
 }
 
 

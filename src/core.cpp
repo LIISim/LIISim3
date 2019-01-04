@@ -20,13 +20,15 @@
 #include "calculations/models/htm_liu.h"
 #include "calculations/models/htm_menser.h"
 #include "calculations/models/htm_mansmann.h"
+#include "calculations/models/htm_musikhin.h"
 
 
 Core* Core::c_instance = 0;
 bool  Core::m_underConstruction = false;
 
-const QString Core::LIISIM_VERSION  = "3.0.6";
+const QString Core::LIISIM_VERSION  = "3.0.7";
 const bool Core::LIISIM_VERSION_PRE = false;
+const bool Core::LIISIM_LARGE_FONTS = false; // larger plot fonts for screenshot purposes
 
 // ----------------------
 // PROGRAM ROOT DIRECTORY
@@ -90,6 +92,7 @@ Core::Core() : QObject(0)
 #ifdef LIISIM_FULL
     HTM_Menser          *h4 = new HTM_Menser;
     HTM_Mansmann        *h5 = new HTM_Mansmann;
+    HTM_Musikhin        *h6 = new HTM_Musikhin;
 #endif
 
     heatTransferModels.push_back( h1 );
@@ -99,6 +102,7 @@ Core::Core() : QObject(0)
 #ifdef LIISIM_FULL
     heatTransferModels.push_back( h4 );
     heatTransferModels.push_back( h5 );
+    heatTransferModels.push_back( h6 );
 #endif
 
     // set standard heat transfer model (to avoid NULL pointer -> crash)

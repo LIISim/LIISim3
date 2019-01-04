@@ -4,7 +4,7 @@
 #include <QWidget>
 #include <QTextBrowser>
 
-class Message;
+#include "notificationmessage.h"
 
 /**
  * @brief The NotificationWindow class displays the current error/warning
@@ -19,11 +19,11 @@ public:
      * @param messageHistory A pointer to the list containing the message history
      * @param parent Parent QWidget
      */
-    NotificationWindow(QList<Message> *messageHistory, QWidget *parent = 0);
+    NotificationWindow(QList<LogMessage> messageHistory, QWidget *parent = 0);
 
     QTextBrowser *textBrowser;
 
-    QList<Message> *messageHistory;
+    QList<LogMessage> messageHistory;
 
     virtual QSize sizeHint() const;
 
@@ -31,7 +31,7 @@ public slots:
     /**
      * @brief update Refills the history window
      */
-    void update();
+    void update(LogMessage msg);
 
 };
 

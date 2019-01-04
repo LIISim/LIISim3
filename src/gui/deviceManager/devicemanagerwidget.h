@@ -15,6 +15,7 @@
 #include <QDialog>
 #include <QDoubleSpinBox>
 #include <QLineEdit>
+#include <QTreeWidget>
 
 #include "core.h"
 #include "io/daqdevice.h"
@@ -24,7 +25,6 @@
 class DeviceManagerDialog : public QDialog
 {
     Q_OBJECT
-
 public:
     DeviceManagerDialog(QWidget *parent = 0);
 
@@ -42,20 +42,6 @@ private:
     QLabel *labelIdentifier;
     QLabel *labelProductType;
     QLabel *labelSerialNumber;
-
-    QListView *listViewAnalogIN;
-    QStringListModel *listModelAnalogIN;
-
-    QListView *listViewAnalogOUT;
-    QStringListModel *listModelAnalogOUT;
-
-    QListView *listViewDigitalIN;
-    QStringListModel *listModelDigitalIN;
-
-    QListView *listViewDigitalOUT;
-    QStringListModel *listModelDigitalOUT;
-
-    QVBoxLayout *layoutOutput;
 
     QList<DAQDevice> devList;
 
@@ -110,7 +96,11 @@ private:
 
     LaserEnergySettingsWidget *laserEnergySettingsWidget;
 
-signals:
+    QTreeWidget *ioInfoTree;
+    QTreeWidgetItem *itemAnalogIn;
+    QTreeWidgetItem *itemAnalogOut;
+    QTreeWidgetItem *itemDigitalIn;
+    QTreeWidgetItem *itemDigitalOut;
 
 public slots:
     void onDeviceListUpdate();

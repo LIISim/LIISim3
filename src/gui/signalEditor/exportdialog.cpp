@@ -169,6 +169,20 @@ ExportDialog::ExportDialog(QWidget *parent) :  QDialog(parent)
     dsrb_temp_layout->setContentsMargins(15,2,2,2);
     boxDataSelLayout->addLayout(dsrb_temp_layout);
 
+    dsrb_temp_pre = new QRadioButton("unprocessed signal data");
+    dsrb_temp_pre->setChecked(!gs->value("ediag/datasel", "temp_post_proc", "false").toBool());
+    dsrb_temp_pre->setEnabled(dscb_tmp);
+    dsrb_temp_layout->addWidget(dsrb_temp_pre);
+
+    dsrb_temp_post = new QRadioButton("processed signal data");
+    dsrb_temp_post->setChecked(gs->value("ediag/datasel", "temp_post_proc", "false").toBool());
+    dsrb_temp_pre->setEnabled(dscb_tmp);
+    dsrb_temp_layout->addWidget(dsrb_temp_post);
+
+    QButtonGroup* ds_temp_group = new QButtonGroup(this);
+    ds_temp_group->addButton(dsrb_temp_pre);
+    ds_temp_group->addButton(dsrb_temp_post);
+
     checkboxTempUnprocessed = new QCheckBox("unprocessed signal data");
     checkboxTempUnprocessed->setChecked(gs->value("ediag/datasel", "temp_unprocessed_state", "true").toBool());
     checkboxTempUnprocessed->setEnabled(dscb_tmp->isChecked());
@@ -206,6 +220,8 @@ ExportDialog::ExportDialog(QWidget *parent) :  QDialog(parent)
     connect(dsrb_raw_post,SIGNAL(toggled(bool)),SLOT(onDataSelRadioButtonToggled(bool)));
     connect(dsrb_abs_pre, SIGNAL(toggled(bool)),SLOT(onDataSelRadioButtonToggled(bool)));
     connect(dsrb_abs_post,SIGNAL(toggled(bool)),SLOT(onDataSelRadioButtonToggled(bool)));
+    connect(dsrb_temp_pre,SIGNAL(toggled(bool)),SLOT(onDataSelRadioButtonToggled(bool)));
+    connect(dsrb_temp_post,SIGNAL(toggled(bool)),SLOT(onDataSelRadioButtonToggled(bool)));
 
     // ----------------------
     // xml export, custom gui
@@ -288,6 +304,8 @@ void ExportDialog::onSelectionChanged(int idx)
             dsrb_raw_post->setVisible(true);
             dsrb_abs_pre->setVisible(true);
             dsrb_abs_post->setVisible(true);
+            dsrb_temp_pre->setVisible(true);
+            dsrb_temp_post->setVisible(true);
         break;
 
         // MAT
@@ -300,6 +318,8 @@ void ExportDialog::onSelectionChanged(int idx)
             dsrb_raw_post->setVisible(false);
             dsrb_abs_pre->setVisible(false);
             dsrb_abs_post->setVisible(false);
+            dsrb_temp_pre->setVisible(false);
+            dsrb_temp_post->setVisible(false);
 
             checkboxAbsUnprocessed->setVisible(true);
             checkboxAbsProcessed->setVisible(true);
@@ -388,6 +408,9 @@ void ExportDialog::onOk()
             erq.userData.insert(28, checkboxRawStdev->isChecked()); //raw standard deviation
             erq.userData.insert(29, checkboxAbsStdev->isChecked()); //abs standard deviation
 
+            erq.userData.insert(25, dsrb_temp_post->isChecked());
+            erq.userData.insert(26, false);
+
             break;
         case 1:
             erq.itype = MAT;
@@ -471,6 +494,9 @@ void ExportDialog::onDataSelCheckBoxToggled(bool state)
         checkboxTempUnprocessed->setEnabled(state);
         checkboxTempProcessed->setEnabled(state);
         checkboxTempStdev->setEnabled(state);
+
+        dsrb_temp_pre->setEnabled(state);
+        dsrb_temp_post->setEnabled(state);
     }
     else if(s == checkboxRawUnprocessed)
         gs->setValue("ediag/datasel", "raw_unprocessed_state", state);
@@ -520,6 +546,14 @@ void ExportDialog::onDataSelRadioButtonToggled(bool state)
     else if(s == dsrb_abs_post && state )
     {
         gs->setValue("ediag/datasel","abs_post_proc",true);
+    }
+    else if(s == dsrb_temp_pre && state)
+    {
+        gs->setValue("ediag/datasel", "temp_post_proc", false);
+    }
+    else if(s == dsrb_temp_post && state)
+    {
+        gs->setValue("ediag/datasel", "temp_post_proc", true);
     }
 }
 

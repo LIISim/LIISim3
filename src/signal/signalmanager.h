@@ -11,6 +11,7 @@
 #include <QMap>
 #include <QHash>
 #include <QAction>
+#include <QFileInfo>
 
 class ProcessingTask;
 class ProcessingChain;
@@ -19,13 +20,10 @@ class MRun;
 class MRunGroup;
 class DataModel;
 
-
-
 #include "../general/LIISimException.h"
 #include "mrun.h"
 #include "memusagemonitor.h"
 #include "../io/signaliorequest.h"
-
 
 /**
  * @brief The SignalManager class manages Signal Import/Export and concurrent signal processing.
@@ -143,6 +141,8 @@ class SignalManager : public QObject
         void onCheckFilesResult(QList<SignalIORequest> result);
         void onIOImportSuccess(SignalIORequest source, SignalFileInfoList fileList);
         void onIOImportError(SignalIORequest source, SignalFileInfo file, QString error);
+
+        void exportFileDialog(QFileInfo &finfo, int &ret);
 
     signals:
 

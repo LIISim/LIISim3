@@ -2,6 +2,7 @@
 
 #include <QDir>
 #include <cstring>
+#include <QMessageBox>
 
 #include "../core.h"
 #include "../signal/processing/temperatureprocessingchain.h"
@@ -75,27 +76,36 @@ void IOmatlab::exportImplementation(const SignalIORequest &rq)
 
 void IOmatlab::checkFiles()
 {
+
 }
 
 
 bool IOmatlab::saveRun(const QString &dirpath, MRun *run)
 {
-
     QString fname = dirpath + run->getName() + ".mat";
-
-    // qDebug() << "   TODO: save run " << fname;
-
     QFileInfo finfo(fname);
     QDir dir(finfo.absoluteDir());
-    if (!dir.exists()) {
+    if(!dir.exists())
         dir.mkpath(".");
+
+    if(finfo.exists())
+    {
+        int ret = 0;
+        connect(this, SIGNAL(fileExists(QFileInfo&,int&)), Core::instance()->getSignalManager(), SLOT(exportFileDialog(QFileInfo&,int&)), Qt::BlockingQueuedConnection);
+        emit fileExists(finfo, ret);
+        disconnect(this, SIGNAL(fileExists(QFileInfo&,int&)), Core::instance()->getSignalManager(), SLOT(exportFileDialog(QFileInfo&,int&)));
+        if(ret == -1) // saving canceled
+        {
+            MSG_ASYNC(QString("%0Export canceled for Run %1").arg(msgprfx, run->getName()), LIISimMessageType::INFO);
+            return false;
+        }
     }
 
     // create MATLAB file
+    fname = finfo.filePath();
     QByteArray buf = fname.toLatin1();
     const char* cfname = buf.constData();
-    mat_t *mat;
-    mat = Mat_CreateVer(cfname, NULL, MAT_FT_MAT5);
+    mat_t *mat = Mat_CreateVer(cfname, NULL, MAT_FT_MAT5);
 
     if(mat)
     {
@@ -430,8 +440,16 @@ matvar_t* IOmatlab::getSettingsStruct(MRun *run)
     // -----------------------
 
     QVector<double> filter_values;
-    for(int i = 0; i < filter.getTransmissions().size(); i++)
-        filter_values.push_back(filter.getTransmissions().at(i));
+    if(filter.identifier == LIISettings::defaultFilterName)
+    {
+        for(int i = 0; i < run->getNoChannels(Signal::RAW); i++)
+            filter_values.push_back(1.0f);
+    }
+    else
+    {
+        for(int i = 0; i < filter.getTransmissions().size(); i++)
+            filter_values.push_back(filter.getTransmissions().at(i));
+    }
 
     edims[0] = 1;
     edims[1] = filter_values.size();

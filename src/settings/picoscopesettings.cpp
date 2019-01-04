@@ -389,7 +389,7 @@ void PicoScopeSettings::setTimebase(unsigned long timebase, PSSignalSource sourc
 
 unsigned long PicoScopeSettings::timebase()
 {
-    return settings.value(key_timebase).toULongLong();
+    return settings.value(key_timebase, 4).toULongLong();
 }
 
 

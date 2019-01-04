@@ -122,6 +122,7 @@ FT_ResultVisualization::FT_ResultVisualization(QWidget *parent) : QWidget(parent
     particleStartDiameterWidget->layout()->setMargin(0);
 
     particleStartDiameterPlot = new SignalPlotWidgetQwt(this);
+    particleStartDiameterPlot->setXAxisNonTimeType(true);
     particleStartDiameterPlot->plot()->setAutoReplot();
     particleStartDiameterPlot->setPlotAxisTitles("Fit Iteration", "Particle start diameter / nm");
 
@@ -145,6 +146,7 @@ FT_ResultVisualization::FT_ResultVisualization(QWidget *parent) : QWidget(parent
     gasTemperatureWidget->layout()->setMargin(0);
 
     gasTemperaturePlot = new SignalPlotWidgetQwt(this);
+    gasTemperaturePlot->setXAxisNonTimeType(true);
     gasTemperaturePlot->plot()->setAutoReplot();
     gasTemperaturePlot->setPlotAxisTitles("Fit Iteration", "Gas temperature / K");
 
@@ -168,6 +170,7 @@ FT_ResultVisualization::FT_ResultVisualization(QWidget *parent) : QWidget(parent
     fitErrorWidget->layout()->setMargin(0);
 
     fitErrorPlot = new SignalPlotWidgetQwt(this);
+    fitErrorPlot->setXAxisNonTimeType(true);
     fitErrorPlot->plot()->setAutoReplot();
     fitErrorPlot->setPlotAxisTitles("Fit Iteration", "Fit Error  (Chisquare) / -");
 

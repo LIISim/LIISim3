@@ -7,17 +7,14 @@
 #include "../core.h"
 #include "mrungroup.h"
 #include "processing/processingpluginconnector.h"
+#include "settings/mrunsettings.h"
 
-/**
- * @brief MRun::MRun Constructor
- * @param name name of Measurement Run
- * @param channelCount_raw_abs number of channels for raw/absolute signals
- */
-MRun::MRun(QString name, int channelCount_raw_abs, MRunGroup *group)
-    : DataItem(group)
-{    
+
+MRun::MRun(QString name, QString filename, QString filenameBase, int channelCount_raw_abs, MRunGroup *group) : DataItem(group)
+{
     this->name = name;
-    filename = name.append("_settings.txt");
+    this->filename = filename;
+    this->filenameBase = filenameBase;
     setData(0,name);
     setData(1,QColor(0,0,255)); // blue
     setData(2,0);
@@ -48,11 +45,11 @@ MRun::MRun(QString name, int channelCount_raw_abs, MRunGroup *group)
 
     setData(4,m_liiSettings.name);
 
-    setLaserFluence(0.0);
+    setLaserFluence(0.0, true);
 
     m_pmtGainVoltage.fill(0.0, channelCount_raw_abs);
     for(int i = 0; i < channelCount_raw_abs; i++)
-        setPmtGainVoltage(i+1,0.0);
+        setPmtGainVoltage(i+1,0.0, true);
 
     m_pmtReferenceGainVoltage.fill(0.0, channelCount_raw_abs);
     for(int i = 0; i < channelCount_raw_abs; i++)
@@ -65,21 +62,18 @@ MRun::MRun(QString name, int channelCount_raw_abs, MRunGroup *group)
     for(int i = 0; i < channelCount_raw_abs; i++)
         setPSRange(i+1, 0.0);
 
-    ps_range = PSRange::NONE;
     ps_coupling = PSCoupling::NONE;
 
     m_psOffset.fill(0.0, channelCount_raw_abs);
     for(int i = 0; i < channelCount_raw_abs; i++)
         setPSOffset(i+1, 0.0);
 
-    ps_offset = 0;
     ps_collectionTime = 0;
     ps_sampleInterval = 0;
     ps_presample = 0;
 
     laserPosition = 0;
     laserSetpoint = 0;
-
 
     if(group)
     {
@@ -91,84 +85,22 @@ MRun::MRun(QString name, int channelCount_raw_abs, MRunGroup *group)
     }
 }
 
+/**
+ * @brief MRun::MRun Constructor
+ * @param name name of Measurement Run
+ * @param channelCount_raw_abs number of channels for raw/absolute signals
+ */
+MRun::MRun(QString name, int channelCount_raw_abs, MRunGroup *group)
+    : MRun(name, name, name, channelCount_raw_abs, group)
+{    
 
-MRun::MRun(QString name, QString filename, int channelCount_raw_abs, MRunGroup *group) : DataItem(group)
+}
+
+
+MRun::MRun(QString name, QString filename, int channelCount_raw_abs, MRunGroup *group)
+    : MRun(name, filename, name, channelCount_raw_abs, group)
 {
-    this->name = name;
-    if(filename.isEmpty())
-        this->filename = name;
-    else
-        this->filename = filename;
-    setData(0,name);
-    setData(1,QColor(0,0,255)); // blue
-    setData(2,0);
-    setData(3,"no description");
 
-    this->channelCount_raw_abs = channelCount_raw_abs;
-    busy = false;
-
-    pchainRaw = new ProcessingChain(this, Signal::RAW);
-    pchainAbs = new ProcessingChain(this, Signal::ABS);
-
-    pchainTemp = new TemperatureProcessingChain(this);
-
-    connect(pchainRaw, SIGNAL(pluginGoneDirty()), SLOT(onPluginGoneDirty()));
-    connect(pchainAbs, SIGNAL(pluginGoneDirty()), SLOT(onPluginGoneDirty()));
-
-    m_calcState = new MRunCalculationStatus(this);
-
-    insertChild(pchainRaw);
-    insertChild(pchainAbs);
-    insertChild(pchainTemp);
-
-    // !!!
-    m_liiSettings = Core::instance()->modelingSettings->defaultLiiSettings();
-    connect(Core::instance()->getDatabaseManager(),
-            SIGNAL(signal_contentChanged(int)),
-            SLOT(onDBmodified(int)));
-
-    setData(4,m_liiSettings.name);
-
-    setLaserFluence(0.0);
-
-    m_pmtGainVoltage.fill(0.0, channelCount_raw_abs);
-    for(int i = 0; i < channelCount_raw_abs; i++)
-        setPmtGainVoltage(i+1,0.0);
-
-    m_pmtReferenceGainVoltage.fill(0.0, channelCount_raw_abs);
-    for(int i = 0; i < channelCount_raw_abs; i++)
-        setPmtReferenceGainVoltage(i+1, 0.0);
-
-    m_filterSetting = LIISettings::defaultFilterName;
-
-    //Set PicoScope default parameters
-    m_psRange.fill(0.0, channelCount_raw_abs);
-    for(int i = 0; i < channelCount_raw_abs; i++)
-        setPSRange(i+1, 0.0);
-
-    ps_range = PSRange::NONE;
-    ps_coupling = PSCoupling::NONE;
-
-    m_psOffset.fill(0.0, channelCount_raw_abs);
-    for(int i = 0; i < channelCount_raw_abs; i++)
-        setPSOffset(i+1, 0.0);
-
-    ps_offset = 0;
-    ps_collectionTime = 0;
-    ps_sampleInterval = 0;
-    ps_presample = 0;
-
-    laserPosition = 0;
-    laserSetpoint = 0;
-
-    if(group)
-    {
-        // add run to given group
-        group->insertChild(this);
-        // register run to global datamodel
-        if(Core::instance())
-            Core::instance()->dataModel()->registerMRun(this);
-    }
 }
 
 
@@ -263,10 +195,14 @@ QString MRun::getName()
     return name;
 }
 
-void MRun::setName(const QString &name)
+void MRun::setName(const QString &name, bool blockChangeNotify)
 {
+    if(this->name != name && !blockChangeNotify)
+        _changedSettings.push_back(UserChangableSettingTypes::Name);
+
     this->name = name;
     setData(0,name);
+
     emit MRunDetailsChanged();
 }
 
@@ -285,8 +221,10 @@ QString MRun::description()
  * @brief MRun::setDescription set description text of MRun
  * @param descr
  */
-void MRun::setDescription(const QString &descr)
+void MRun::setDescription(const QString &descr, bool blockChangeNotify)
 {
+    if(data(3).toString() != descr && !blockChangeNotify)
+        _changedSettings.push_back(UserChangableSettingTypes::Description);
     setData(3,descr);
     emit MRunDetailsChanged();
 }
@@ -306,8 +244,11 @@ double MRun::laserFluence()
  * @brief MRun::setLaserFluence set laser fluence
  * @param laserFluence [mJ/mm^2]
  */
-void MRun::setLaserFluence(double laserFluence)
+void MRun::setLaserFluence(double laserFluence, bool blockChangeNotify)
 {
+    if(laserFluence != m_laserFluence && !blockChangeNotify)
+        _changedSettings.push_back(UserChangableSettingTypes::LaserFluence);
+
     m_laserFluence = laserFluence;
 
     // also set a filed in data vector
@@ -341,13 +282,17 @@ double MRun::pmtGainVoltage(int channelID)
  * @param channelID
  * @param voltage
  */
-void MRun::setPmtGainVoltage(int channelID, double voltage)
+void MRun::setPmtGainVoltage(int channelID, double voltage, bool blockChangeNotify)
 {
     if(channelID < 1 || channelID > m_pmtGainVoltage.size())
     {
         MSG_ERR(QString("MRun::setPmtGainVoltage invalid channel id %0").arg(channelID));
         return;
     }
+
+    if(voltage != m_pmtGainVoltage[channelID-1] && !blockChangeNotify)
+        _changedSettings.push_back(UserChangableSettingTypes::PMTChannelGain);
+
     m_pmtGainVoltage[channelID-1] = voltage;
 
     // also set a filed in data vector
@@ -466,9 +411,12 @@ LIISettings MRun::liiSettings()
  * @param identifier
  * @return true if given filter identifier exists (in current LIISettings)
  */
-bool MRun::setFilter(const QString &identifier)
+bool MRun::setFilter(const QString &identifier, bool blockChangeNotify)
 {
    QMutexLocker lock(&settingsMutex);
+
+   if(m_filterSetting != m_liiSettings.filter(identifier).identifier && !blockChangeNotify)
+       _changedSettings.push_back(UserChangableSettingTypes::NDFilter);
 
     // get filter from current liisettings
     // LIISettings.filter() returns a default 'no Filter' when
@@ -489,7 +437,7 @@ bool MRun::setFilter(const QString &identifier)
  * @brief MRun::setLiiSettings set LIISettings of MRun
  * @param liiSettings
  */
-void MRun::setLiiSettings(const LIISettings &liiSettings)
+void MRun::setLiiSettings(const LIISettings &liiSettings, bool blockChangeNotify)
 {
     QMutexLocker lock(&settingsMutex);
     QString settingsName = m_liiSettings.name;
@@ -507,6 +455,9 @@ void MRun::setLiiSettings(const LIISettings &liiSettings)
         emit LIISettingsChanged();
         return;
     }
+
+    if(m_liiSettings.filename != liiSettings.filename && !blockChangeNotify)
+        _changedSettings.push_back(UserChangableSettingTypes::LIISettings);
 
     m_liiSettings = liiSettings;
     settingsName = m_liiSettings.name;
@@ -968,4 +919,24 @@ void MRun::updateCalculationStatus()
 void MRun::onPluginGoneDirty()
 {
     m_calcState->setPluginChanged();
+}
+
+
+bool MRun::saveCurrentRunSettings()
+{
+    QString dirpath = importRequest().runsettings_dirpath;
+    if(dirpath.isEmpty())
+    {
+        dirpath = importRequest().datadir;
+        importRequest().runsettings_dirpath = importRequest().datadir;
+    }
+
+    MRunSettings settings(this);
+
+    bool ret = settings.save(dirpath);
+
+    if(ret)
+        _changedSettings.clear();
+
+    return ret;
 }

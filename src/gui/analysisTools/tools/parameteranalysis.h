@@ -15,6 +15,36 @@
 
 Q_DECLARE_METATYPE(Signal::SType)
 
+class ParameterVisualization : public BasePlotWidgetQwt
+{
+    Q_OBJECT
+public:
+    ParameterVisualization(QWidget *parent = 0);
+
+    enum PlotType {
+        LINE_CROSSES,
+        LINE,
+        DOTS_SMALL,
+        DOTS_MEDIUM,
+        DOTS_LARGE,
+        LINE_ELLIPSE
+    };
+
+    ParameterVisualization::PlotType getPlotPresentationType();
+
+private:
+    QAction *actionShowDataPAType;
+
+    PlotType _plotType;
+
+signals:
+    void plotRepresentationTypeChanged(ParameterVisualization::PlotType type);
+
+protected slots:
+    virtual void onPlotTypeActionTriggerd(QAction* action = 0);
+
+};
+
 class ParameterAnalysis;
 
 class ParameterAnalysisUpdater : public QThread
@@ -44,6 +74,8 @@ class ParameterAnalysisCurve : public QObject
 public:
     explicit ParameterAnalysisCurve(QObject *parent = 0);
 
+    void updateStyle();
+
     BasePlotCurve *curve;
 
     QString runNames;
@@ -60,6 +92,8 @@ public:
     bool visible;
     bool ownColor;
     QColor color;
+
+    ParameterVisualization::PlotType presentationType;
 
     QVector<double> xData;
     QVector<double> yData;
@@ -80,6 +114,7 @@ public slots:
     void onButtonRemoveReleased();
     void onButtonColorReleased();
     void onColorSelected(const QColor &color);
+    void onPlotStyleChanged(const ParameterVisualization::PlotType type);
 
 };
 
@@ -101,7 +136,7 @@ private:
     MRun *currentMRun;
     MPoint *currentMPoint;
 
-    BasePlotWidgetQwt* paramPlot;
+    ParameterVisualization* paramPlot;
 
     LabeledComboBox *comboboxSignalType1;
     LabeledComboBox *comboboxSignalType2;
@@ -139,9 +174,9 @@ private:
     double xEnd1;
 
     virtual void handleSignalDataChanged();
-    virtual void handleSelectedRunsChanged(QList<MRun *> &runs);
+    virtual void handleSelectedRunsChanged(const QList<MRun *> &runs);
     virtual void handleCurrentRunChanged(MRun *run);
-    virtual void handleSelectedChannelsChanged(QList<int>& ch_ids);
+    virtual void handleSelectedChannelsChanged(const QList<int>& ch_ids);
 
     virtual void onToolActivation();
 
@@ -174,6 +209,14 @@ private:
     QString identifier_avg_data_2;
     QString identifier_integral_1;
     QString identifier_integral_2;
+    QString identifier_min_1;
+    QString identifier_min_2;
+    QString identifier_max_1;
+    QString identifier_max_2;
+    QString identifier_min_time_1;
+    QString identifier_min_time_2;
+    QString identifier_max_time_1;
+    QString identifier_max_time_2;
     QString identifier_fit_factor;
     QString identifier_pmt_gain_voltage;
     QString identifier_pmt_reference_voltage;
@@ -213,6 +256,8 @@ private slots:
     void updateCurves();
 
     void onSplitterMoved();
+
+    void onPlotTypeChanged(ParameterVisualization::PlotType type);
 
 };
 

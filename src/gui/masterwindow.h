@@ -18,6 +18,7 @@
 //#include "utils/lightbox/qlightboxwidget.h"
 #include "utils/aboutwindow.h"
 
+class DatabaseWindow;
 
 /**
  * @brief The MasterWindow class serves as a Parent Widget for all
@@ -35,6 +36,7 @@ public:
     static QString identifier_tutorial;
 
 protected:
+    virtual void closeEvent(QCloseEvent *event);
 
 private:
     QString m_windowTitle;
@@ -61,6 +63,8 @@ private:
     QPushButton* status_abort;
 
     AboutWindow *aboutWindow;
+
+    DatabaseWindow* databaseWindow;
 
 private slots:
     void onTabChanged(int i);

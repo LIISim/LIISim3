@@ -12,6 +12,7 @@ TransmissionEditor::TransmissionEditor(QWidget *parent) : DbEditorWidget(parent)
 
     table = new QTableWidget;
     basePlot = new BasePlotWidgetQwt(this);
+    basePlot->setXAxisNonTimeType(true);
 
     QWidget *widget = new QWidget;
     widget->setLayout(new QHBoxLayout);

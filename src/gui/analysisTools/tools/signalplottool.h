@@ -36,9 +36,9 @@ public:
 
     virtual void handleSignalDataChanged();
     virtual void handleCurrentRunChanged(MRun* run);
-    virtual void handleSelectedRunsChanged(QList<MRun*>& runs);
+    virtual void handleSelectedRunsChanged(const QList<MRun*>& runs);
     virtual void handleSelectedStypeChanged(Signal::SType stype);
-    virtual void handleSelectedChannelsChanged(QList<int>& ch_ids);
+    virtual void handleSelectedChannelsChanged(const QList<int> &ch_ids);
 
     virtual QList<QAction*> toolbarActions();
 

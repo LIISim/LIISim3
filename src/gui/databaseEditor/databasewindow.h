@@ -14,6 +14,12 @@ public:
     explicit DatabaseWindow(QWidget *parent = 0);
 
     QToolBar* ribbonToolbar(){return m_ribbonToolbar;}
+
+    DatabaseEditor *getDatabaseEditor()
+    {
+        return dbEdit;
+    }
+
 private:
     DatabaseEditor* dbEdit;
 

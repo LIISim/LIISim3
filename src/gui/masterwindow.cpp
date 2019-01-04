@@ -131,7 +131,7 @@ MasterWindow::MasterWindow(QWidget *parent) : QMainWindow(parent)
 
     // DATABASE EDITOR (same ribbonToolbar as homeScreen)
 
-    DatabaseWindow* databaseWindow = new DatabaseWindow;
+    databaseWindow = new DatabaseWindow;
     widgetStack->addWidget(databaseWindow);
     topBar->addTab("Database", databaseWindow->ribbonToolbar());
 
@@ -237,6 +237,52 @@ MasterWindow::~MasterWindow()
         delete aboutWindow;
 
     masterWindowCount--;
+}
+
+
+void MasterWindow::closeEvent(QCloseEvent *event)
+{
+    if(databaseWindow->getDatabaseEditor()->hasUnsavedChanges())
+    {
+        QMessageBox::StandardButton resBtn = QMessageBox::question(this, m_windowTitle,
+                                                tr("There are unsaved changes in the database editor."
+                                                "\nAre you sure you want to quit?"),
+                                                QMessageBox::No | QMessageBox::Yes, QMessageBox::Yes);
+        if(resBtn != QMessageBox::Yes)
+            event->ignore();
+        else
+            event->accept();
+    }
+
+    QString runNames;
+    bool unsavedSettings = false;
+    QList<MRun*> mrunList = Core::instance()->dataModel()->mrunList();
+
+    for(int i = 0; i < mrunList.size(); i++)
+    {
+        if(mrunList.at(i)->unsavedSettings())
+        {
+            unsavedSettings = true;
+            runNames.append(mrunList.at(i)->getName());
+            runNames.append("<br>");
+        }
+    }
+
+    if(unsavedSettings)
+    {
+        QString message = "<b>There are unsaved changes in the following measurement run settings:</b><br><br>";
+        message.append(runNames);
+        message.append("<br><b>Are you sure you want to quit?</b>");
+
+        QMessageBox::StandardButton resBtn = QMessageBox::information(this, m_windowTitle,
+            message, QMessageBox::No | QMessageBox::Yes, QMessageBox::Yes);
+
+        if(resBtn != QMessageBox::Yes)
+            event->ignore();
+        else
+            event->accept();
+    }
+
 }
 
 

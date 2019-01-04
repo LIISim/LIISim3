@@ -15,6 +15,8 @@ public:
     explicit MaterialComboBox(QWidget *parent = 0);
     ~MaterialComboBox();
 
+    void disconnectFromGlobal();
+
 signals:
 
 public slots:
@@ -27,6 +29,7 @@ private slots:
 
 private:
     bool mute;
+    bool disconnected;
 };
 
 #endif // MATERIALCOMBOBOX_H

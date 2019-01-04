@@ -8,10 +8,11 @@
 /**
  * @brief The Message class is used for the history in the NotificationWindow.
  */
-class Message
+class LogMessage
 {
 public:
-    Message(const LIISimMessageType type, const QString &msg);
+    LogMessage();
+    LogMessage(const LIISimMessageType type, const QString &msg);
 
     const LIISimMessageType type;
     const QString msg;

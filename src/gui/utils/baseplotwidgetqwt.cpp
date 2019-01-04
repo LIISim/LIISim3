@@ -1,5 +1,6 @@
 #include "baseplotwidgetqwt.h"
 
+#include "../../core.h";
 
 #include <QSplitter>
 #include <QMenu>
@@ -59,6 +60,7 @@ BasePlotWidgetQwt::BasePlotWidgetQwt(QWidget *parent) : QWidget(parent)
     qwtPlot = new QwtPlot(this);
     selectedCurve = 0;
     dataTableWindow = NULL;
+    xAxisNonTimeType = false;
 
     // default settings
     zmode = PLOT_PAN;
@@ -98,13 +100,18 @@ BasePlotWidgetQwt::BasePlotWidgetQwt(QWidget *parent) : QWidget(parent)
      *************/
 
     // setup title font
-    //titleFont.setPointSize(10); // enlarged text
-    titleFont.setPointSize(8);
+    if (Core::LIISIM_LARGE_FONTS)
+        titleFont.setPointSize(10); // enlarged text
+    else
+        titleFont.setPointSize(8);
     titleFont.setBold(true);
 
     // setup axes font
-    //axisFont.setPointSize(12); // enlarged text
-    axisFont.setPointSize(8);
+    if (Core::LIISIM_LARGE_FONTS)
+        axisFont.setPointSize(12); // enlarged text
+    else
+        axisFont.setPointSize(8);
+
     qwtPlot->setAxisFont(QwtPlot::yLeft,axisFont);
     qwtPlot->setAxisFont(QwtPlot::xBottom,axisFont);
 
@@ -121,7 +128,10 @@ BasePlotWidgetQwt::BasePlotWidgetQwt(QWidget *parent) : QWidget(parent)
     legendItem = new QwtPlotLegendItem;
     legendItem->setAlignment(Qt::AlignRight | Qt::AlignTop);
     legendItem->setMaxColumns(2);
-    //legendItem->setFont(axisFont); // enlarged text
+
+    if (Core::LIISIM_LARGE_FONTS)
+        legendItem->setFont(axisFont); // enlarged text
+
     legendItem->setRenderHint(QwtPlotItem::RenderAntialiased);
     QColor legendTxtColor(Qt::black);
     legendItem->setTextPen(legendTxtColor);
@@ -1180,6 +1190,7 @@ void BasePlotWidgetQwt::onShowDataTable()
     if(dataTableWindow == NULL)
     {
         dataTableWindow = new DataTableWidget(&curves);
+        dataTableWindow->setXAxisNonTimeType(xAxisNonTimeType);
         dataTableWindow->show();
     }
     QString windowTitle = "";
@@ -1516,4 +1527,10 @@ void BasePlotWidgetQwt::setDataTableRunName(QString name)
 void BasePlotWidgetQwt::setDataTableToolName(QString name)
 {
     dataTableToolName = name;
+}
+
+
+void BasePlotWidgetQwt::setXAxisNonTimeType(bool nonTime)
+{
+    xAxisNonTimeType = nonTime;
 }

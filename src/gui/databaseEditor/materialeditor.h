@@ -7,6 +7,8 @@
 #include <QLineEdit>
 #include <QTableWidget>
 
+#include "tablerowelement.h"
+
 /**
  * @brief The MaterialEditor class
  * @ingroup GUI
@@ -15,22 +17,32 @@
 class MaterialEditor : public DbEditorWidget
 {
     Q_OBJECT
-
-    QTableWidget* table;
-    QTableWidget* table_calc;
-
 public:
-
     explicit MaterialEditor(QWidget *parent = 0);
 
     void setDatabaseManager(DatabaseManager* dbm);
 
 private:
-
+    void updateCurrentView();
+    void updateCalculatedProperties();
     void showPropertyInRow(const Property& prop, int row);
     void showOpticalPropertyInRow(const OpticalProperty &prop, int &row);
 
-signals:
+    QTableWidget* table;
+    QTableWidget* table_calc;
+
+    QList<DBETableRowElement*> _tableRows;
+    QList<DBETableRowElement*> _emTableRows;
+    QList<Property> _emValues;
+    int _emRowStart;
+    bool _rowDataChanged;
+    bool _blockInit;
+
+private slots:
+    void onRowDataChanged();
+    void onEmRowDataChanged();
+    void onEmRowDeleteRequest();
+    void onEmRowAddRequest();
 
 public slots:
 
@@ -39,8 +51,6 @@ public slots:
     void onApplyChanges();
     void onAddItemToList();
     void onRemoveCurrentSelectionFromList();
-
-     void updateCurrentView();
 
 };
 

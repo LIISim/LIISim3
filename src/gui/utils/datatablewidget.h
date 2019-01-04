@@ -54,6 +54,7 @@ class DataTableWidget : public QWidget
     QLabel *labelNoCurveData;
 
     bool mrunPostMode;
+    bool xAxisNonTimeType;
 
     Signal::SType stype;
 
@@ -67,9 +68,7 @@ public:
 
     void updateView();
 
-signals:
-
-public slots:
+    void setXAxisNonTimeType(bool nonTime);
 
 private slots:
     void onCopySelection();

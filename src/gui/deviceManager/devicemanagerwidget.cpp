@@ -6,6 +6,7 @@
 #include <QGridLayout>
 #include <QSpacerItem>
 #include <QCheckBox>
+#include <QHeaderView>
 #include "../utils/numberlineedit.h"
 
 #include "../dataAcquisition/dataacquisitionwindow.h"
@@ -22,7 +23,7 @@ DeviceManagerDialog::DeviceManagerDialog(QWidget *parent) : QDialog(parent)
     layoutMain->addLayout(layoutLeft);
 
     listView = new QListView(this);
-    listView->setMaximumWidth(200);
+    //listView->setMaximumWidth(200);
     layoutLeft->addWidget(listView);
 
     listModel = new QStringListModel(this);
@@ -30,11 +31,6 @@ DeviceManagerDialog::DeviceManagerDialog(QWidget *parent) : QDialog(parent)
     listView->setEditTriggers(QAbstractItemView::NoEditTriggers);
 
     buttonDiscover = new QPushButton("Discover", this);
-    /*if(Core::instance()->devManager->isDiscovering())
-    {
-        buttonDiscover->setEnabled(false);
-        buttonDiscover->setText("Discovering...");
-    }*/
     layoutLeft->addWidget(buttonDiscover);
 
     layoutMain->setAlignment(layoutLeft, Qt::AlignLeft);
@@ -51,37 +47,26 @@ DeviceManagerDialog::DeviceManagerDialog(QWidget *parent) : QDialog(parent)
     labelSerialNumber = new QLabel("Serial Number:", this);
     layoutDeviceInfo->addWidget(labelSerialNumber);
 
-    QLabel *labelAnalogIN = new QLabel("Analog IN:", this);
-    listViewAnalogIN = new QListView(this);
-    listModelAnalogIN = new QStringListModel(this);
-    listViewAnalogIN->setModel(listModelAnalogIN);
-    listViewAnalogIN->setMaximumWidth(300);
-    layoutDeviceInfo->addWidget(labelAnalogIN);
-    layoutDeviceInfo->addWidget(listViewAnalogIN);
+    ioInfoTree = new QTreeWidget(this);
+    ioInfoTree->setHeaderLabel("Available I/O");
 
-    QLabel *labelAnalogOUT = new QLabel("Analog OUT:", this);
-    listViewAnalogOUT = new QListView(this);
-    listModelAnalogOUT = new QStringListModel(this);
-    listViewAnalogOUT->setModel(listModelAnalogOUT);
-    listViewAnalogOUT->setMaximumWidth(300);
-    layoutDeviceInfo->addWidget(labelAnalogOUT);
-    layoutDeviceInfo->addWidget(listViewAnalogOUT);
+    itemAnalogIn = new QTreeWidgetItem(ioInfoTree);
+    itemAnalogIn->setText(0, "Analog IN");
+    itemAnalogIn->setExpanded(true);
 
-    QLabel *labelDigitalIN = new QLabel("Digital IN:", this);
-    listViewDigitalIN = new QListView(this);
-    listModelDigitalIN = new QStringListModel(this);
-    listViewDigitalIN->setModel(listModelDigitalIN);
-    listViewDigitalIN->setMaximumWidth(300);
-    layoutDeviceInfo->addWidget(labelDigitalIN);
-    layoutDeviceInfo->addWidget(listViewDigitalIN);
+    itemAnalogOut = new QTreeWidgetItem(ioInfoTree);
+    itemAnalogOut->setText(0, "Analog OUT");
+    itemAnalogOut->setExpanded(true);
 
-    QLabel *labelDigitalOUT = new QLabel("Digital OUT:", this);
-    listViewDigitalOUT = new QListView(this);
-    listModelDigitalOUT = new QStringListModel(this);
-    listViewDigitalOUT->setModel(listModelDigitalOUT);
-    listViewDigitalOUT->setMaximumWidth(300);
-    layoutDeviceInfo->addWidget(labelDigitalOUT);
-    layoutDeviceInfo->addWidget(listViewDigitalOUT);
+    itemDigitalIn = new QTreeWidgetItem(ioInfoTree);
+    itemDigitalIn->setText(0, "Digital IN");
+    itemDigitalIn->setExpanded(true);
+
+    itemDigitalOut = new QTreeWidgetItem(ioInfoTree);
+    itemDigitalOut->setText(0, "Digital OUT");
+    itemDigitalOut->setExpanded(true);
+
+    layoutDeviceInfo->addWidget(ioInfoTree);
 
     layoutMain->addLayout(layoutDeviceInfo);
     layoutMain->setAlignment(layoutDeviceInfo, Qt::AlignLeft);
@@ -150,7 +135,7 @@ DeviceManagerDialog::DeviceManagerDialog(QWidget *parent) : QDialog(parent)
     connect(Core::instance()->ioSettings, SIGNAL(settingsChanged()), SLOT(onIOSettingsChanged()));
 
     QGroupBox *groupBoxInput = new QGroupBox("Gain Input Channel");
-    groupBoxInput->setMinimumWidth(200);
+    //groupBoxInput->setMinimumWidth(200);
     //groupBoxInput->setMaximumWidth(300);
     //groupBoxInput->setMaximumHeight(150);
     QGridLayout *layoutInputGroupBox = new QGridLayout();
@@ -182,7 +167,7 @@ DeviceManagerDialog::DeviceManagerDialog(QWidget *parent) : QDialog(parent)
     //layoutMain->setAlignment(groupBoxInput, Qt::AlignTop | Qt::AlignRight);
 
     QGroupBox *groupBoxDigitalOutput = new QGroupBox("Digital Output", this);
-    groupBoxDigitalOutput->setMinimumWidth(300);
+    //groupBoxDigitalOutput->setMinimumWidth(300);
     //groupBoxDigitalOutput->setMaximumWidth(300);
     //groupBoxDigitalOutput->setMaximumHeight(300);
     QGridLayout *layoutDigitalOutputBox = new QGridLayout();
@@ -268,29 +253,24 @@ DeviceManagerDialog::DeviceManagerDialog(QWidget *parent) : QDialog(parent)
 
     QVBoxLayout *layoutRight = new QVBoxLayout;
 
-
-    //layoutMain->addWidget(laserEnergySettingsWidget);
-    //layoutMain->setAlignment(laserEnergySettingsWidget, Qt::AlignTop);
-
     ok = new QPushButton("OK", this);
     cancel = new QPushButton("Cancel", this);
 
-    QWidget *blub = new QWidget(this);
-    QHBoxLayout *layoutOKCancel = new QHBoxLayout(blub);
-    //layoutOKCancel->setMargin(0);
+    QHBoxLayout *layoutOKCancel = new QHBoxLayout();
     layoutOKCancel->addWidget(cancel);
     layoutOKCancel->addWidget(ok);
-
-    //layoutDeviceInfo->addWidget(blub);
-    //layoutDeviceInfo->setAlignment(blub, Qt::AlignBottom | Qt::AlignRight);
 
     layoutRight->addWidget(groupBoxSettings);
     layoutRight->addWidget(groupBoxInput);
     layoutRight->addWidget(groupBoxDigitalOutput);
-    layoutRight->addWidget(laserEnergySettingsWidget);
-    layoutRight->addWidget(blub);
-    layoutRight->setAlignment(blub, Qt::AlignBottom | Qt::AlignRight);
     layoutMain->addLayout(layoutRight);
+
+    QVBoxLayout *layoutLaserEnergyOKCancel = new QVBoxLayout;
+    layoutLaserEnergyOKCancel->addWidget(laserEnergySettingsWidget);
+    layoutLaserEnergyOKCancel->addLayout(layoutOKCancel);
+    layoutLaserEnergyOKCancel->setAlignment(layoutOKCancel, Qt::AlignRight);
+
+    layoutMain->addLayout(layoutLaserEnergyOKCancel);
 
     connect(ok, SIGNAL(released()), SLOT(onButtonOKReleased()));
     connect(cancel, SIGNAL(released()), SLOT(onButtonCancelReleased()));
@@ -478,22 +458,54 @@ void DeviceManagerDialog::onDeviceListClicked(QModelIndex index)
     QStringList temp1;
     for(int i = 0; i < devList.at(position).analogIn.size(); i++)
         temp1 << devList.at(position).analogIn.value(i);
-    listModelAnalogIN->setStringList(temp1);
 
     QStringList temp2;
     for(int i = 0; i < devList.at(position).analogOut.size(); i++)
         temp2 << devList.at(position).analogOut.value(i);
-    listModelAnalogOUT->setStringList(temp2);
 
     QStringList temp3;
     for(int i = 0; i < devList.at(position).digitalIn.size(); i++)
         temp3 << devList.at(position).digitalIn.value(i);
-    listModelDigitalIN->setStringList(temp3);
 
     QStringList temp4;
     for(int i = 0; i < devList.at(position).digitalOut.size(); i++)
         temp4 << devList.at(position).digitalOut.value(i);
-    listModelDigitalOUT->setStringList(temp4);
+
+    while(itemAnalogIn->childCount() > 0)
+        delete itemAnalogIn->takeChild(0);
+
+    while(itemAnalogOut->childCount() > 0)
+        delete itemAnalogOut->takeChild(0);
+
+    while(itemDigitalIn->childCount() > 0)
+        delete itemDigitalIn->takeChild(0);
+
+    while(itemDigitalOut->childCount() > 0)
+        delete itemDigitalOut->takeChild(0);
+
+    for(QString text : temp1)
+    {
+        QTreeWidgetItem *item = new QTreeWidgetItem(itemAnalogIn);
+        item->setText(0, text);
+    }
+
+    for(QString text : temp2)
+    {
+        QTreeWidgetItem *item = new QTreeWidgetItem(itemAnalogOut);
+        item->setText(0, text);
+    }
+
+    for(QString text : temp3)
+    {
+        QTreeWidgetItem *item = new QTreeWidgetItem(itemDigitalIn);
+        item->setText(0, text);
+    }
+
+    for(QString text : temp4)
+    {
+        QTreeWidgetItem *item = new QTreeWidgetItem(itemDigitalOut);
+        item->setText(0, text);
+    }
 }
 
 
@@ -504,13 +516,21 @@ void DeviceManagerDialog::onButtonDiscoverReleased()
 
     QStringList temp;
     listModel->setStringList(temp);
-    listModelAnalogIN->setStringList(temp);
-    listModelAnalogOUT->setStringList(temp);
-    listModelDigitalIN->setStringList(temp);
-    listModelDigitalOUT->setStringList(temp);
     labelIdentifier->setText("");
     labelProductType->setText("Product Type:");
     labelSerialNumber->setText("Serial Number:");
+
+    while(itemAnalogIn->childCount() > 0)
+        delete itemAnalogIn->takeChild(0);
+
+    while(itemAnalogOut->childCount() > 0)
+        delete itemAnalogOut->takeChild(0);
+
+    while(itemDigitalIn->childCount() > 0)
+        delete itemDigitalIn->takeChild(0);
+
+    while(itemDigitalOut->childCount() > 0)
+        delete itemDigitalOut->takeChild(0);
 
     Core::instance()->devManager->discover();
 }

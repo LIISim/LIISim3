@@ -3,10 +3,10 @@
 
 #include "dbeditorwidget.h"
 #include "../../general/LIISimMessageType.h"
+#include "tablerowelement.h"
 
 #include <QLineEdit>
 #include <QTableWidget>
-
 
 /**
  * @brief The GasEditor class
@@ -25,20 +25,22 @@ public:
     void setDatabaseManager(DatabaseManager* dbm);
 
 private:
+    void updateView();
 
-
-    void showPropertyInRow(const Property& prop, int row);
+    QList<DBETableRowElement*> _tableRows;
+    bool _rowDataChanged;
+    bool _blockInit;
 
 signals:
-
-
     /**
      * @brief emitted if changes on the database's gasproperties has been apllied
      */
     void signal_gasesUpdated();
 
-public slots:
+private slots:
+    void onRowDataChanged();
 
+public slots:
     void initData();
     void onSelectionChanged(const QItemSelection &selection);
     void onApplyChanges();

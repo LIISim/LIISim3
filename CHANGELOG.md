@@ -1,3 +1,43 @@
+### 3.0.7
+                        
+##### Features
+* DatabaseEditor: Properties can now be directly edited within the GUI and all supported property types can be selected from a dropdown menu
+* AnalysisTools - MeasurementList: new analysis tool for visualization of all loaded MRuns and parameters in a table, supports copy/paste functionalities to clipboard
+* AnalysisTools - TemperatureFit: customized Planck curves can be added for comparison to the 'Fit visualization' plot 
+
+* AnalysisTools - TemperatureFit: added plot tools and auto-scaling to 'Fit visualization' plot 
+* AnalysisTools - TemperatureFit: added plot tools for 'Result' plot
+* AnalysisTools - ParameterAnalysis: new parameter types 'min/max of range' and 'time at min/max signal value'
+* AnalysisTools - ParameterAnalysis: plot type of 'Parameter Visualization' plot can now be changed by right click menu
+* Export: IOCSV: temperature traces can now be exported, export options added
+                                                                                        
+
+##### Bug fixes
+* Code fixes for support of MSVC2017 compiler
+* AnalysisTools - TemperatureFit: fixed iteration counter in spectrum plot
+* AnalysisTools - TemperatureFit: auto scaling modified to prevent the plot to clip into the legend
+* AnalysisTools - ParameterAnalysis: shows now ND-transmission for each channel instead of filter identifier
+* DataTableWidget: x-values are now shown in their correct unit (previously only time unit)
+* Export: IOMatlab: handling for default ND-filter added (vector in MATLAB files could be empty)
+* Export: IOCSV: removed false error message about 'dt'
+* Import: ImportDialog: now shows name of LIISettings filename in error message if file was not found
+* IOCustom/ImportDialogHelper: fixed import window not closing after successful signal import
+* NotificationWindow: fixed auto scrolling bug when new log messages are appended
+* MRunSettings: fix for "settings not found" problem occured in some cases
+                                  
+
+##### Other changes
+
+* IOMatlab, SignalManager, ExportOverwriteDialog: dialog window is opened if export filename already exists (overwrite or choose another name)
+* DatabaseEditor: reminder for 'unsaved changes' added
+* DatabaseEditor: reworked error handling
+* DatabaseEditor: added generation of unique filenames, dialog is now instanciated with db type to check for name duplicates
+* DatabaseEditor, MasterWindow: dialog window opens at exit if database editor contains unsaved changes
+* MRunDetails: settings changes are now color-marked, warning at exit added if settings are not saved
+* Signal: added functions to calculate min and max value of signal range
+* Signal: added functions to calculate time at max/min value
+* AnalysisTools - TemperatureFit: moved 'clear plot' button from 'Fit' plot toolbar to planck curve settings
+
 
 
 ### 3.0.6

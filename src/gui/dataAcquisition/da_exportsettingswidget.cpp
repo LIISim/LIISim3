@@ -4,13 +4,15 @@
 #include <QHeaderView>
 #include <QFileDialog>
 
+const QString DA_ExportSettingsWidget::id_yyyymmddhhmmss = "YYYY-MM-DD_HH-MM-SS";
+const QString DA_ExportSettingsWidget::id_run_yyyymmddhhmmss = "[Run name]_YYYY-MM-DD_HH-MM-SS";
+
 /**
  * @brief DA_ExportSettingsWidget::DA_ExportSettingsWidget Constructor
  * @param parent Parent Widget
  */
 DA_ExportSettingsWidget::DA_ExportSettingsWidget(QWidget *parent) : QTableWidget(parent)
 {
-
     // ------------------
     // setup QTableWidget
     // ------------------
@@ -41,16 +43,6 @@ DA_ExportSettingsWidget::DA_ExportSettingsWidget(QWidget *parent) : QTableWidget
     row++;
 
     // ----------------------
-    // row 1: auto refresh file name
-    // ----------------------
-
-    setSpan(row,0,1,2);
-    checkBoxAutoRefreshFileName = new QCheckBox("Automatically refresh file name");
-    setCellWidget(row,0,checkBoxAutoRefreshFileName);
-
-    row++;
-
-    // ----------------------
     // row 2: standard deviation
     // ----------------------
 
@@ -60,16 +52,35 @@ DA_ExportSettingsWidget::DA_ExportSettingsWidget(QWidget *parent) : QTableWidget
 
     row++;
 
+    // ----------------------
+    // row 1: auto refresh file name
+    // ----------------------
+
+    //setSpan(row,0,1,2);
+    checkBoxAutoRefreshFileName = new QCheckBox("Generate dynamic run name:");
+    setCellWidget(row,0,checkBoxAutoRefreshFileName);
+
+    comboboxNameFormat = new QComboBox(this);
+    comboboxNameFormat->addItem(id_yyyymmddhhmmss);
+    comboboxNameFormat->addItem(id_run_yyyymmddhhmmss);
+    setCellWidget(row, 1, comboboxNameFormat);
+
+    row++;
+
+
+
     // ------------------
-    // row 3: runname
+    // row 3: run name
     // ------------------
 
-    setItem(row,0,new QTableWidgetItem("Runname"));
+    setItem(row,0,new QTableWidgetItem("Run name"));
     item(row,0)->setFlags(Qt::ItemIsEnabled);
-    item(row,0)->setIcon(QIcon(Core::rootDir + "resources/icons/arrow_refresh.png"));
 
-    setItem(row,1,new QTableWidgetItem("name"));
-    item(row,1)->setFlags(Qt::ItemIsEnabled | Qt::ItemIsEditable);
+    //setItem(row,1,new QTableWidgetItem("name"));
+    //item(row,1)->setFlags(Qt::ItemIsEnabled | Qt::ItemIsEditable);
+
+    lineeditRunname = new QLineEdit(this);
+    setCellWidget(row, 1, lineeditRunname);
 
     row++;
 
@@ -111,10 +122,6 @@ DA_ExportSettingsWidget::DA_ExportSettingsWidget(QWidget *parent) : QTableWidget
             SIGNAL(itemDoubleClicked(QTableWidgetItem*)),
             SLOT(onItemDoubleClicked(QTableWidgetItem*)));
 
-    connect(this,
-            SIGNAL(cellClicked(int,int)),
-            SLOT(refreshRunName(int,int)));
-
     connect(cbExpType,
             SIGNAL(currentTextChanged(QString)),
             SLOT(onExportTypeSelectionChanged(QString)));
@@ -127,7 +134,15 @@ DA_ExportSettingsWidget::DA_ExportSettingsWidget(QWidget *parent) : QTableWidget
             SIGNAL(stateChanged(int)),
             SLOT(onAutoRefreshStateChanged(int)));
 
-    generateRunName();
+    connect(comboboxNameFormat,
+            SIGNAL(currentIndexChanged(QString)),
+            SLOT(onComboboxDynamicRunnameChanged(QString)));
+
+    connect(lineeditRunname,
+            SIGNAL(textEdited(QString)),
+            SLOT(onLineeditRunnameChanged(QString)));
+
+    onComboboxDynamicRunnameChanged(comboboxNameFormat->currentText());
     onAutoSaveStateChanged(0);
     onAutoRefreshStateChanged(0);
 }
@@ -150,7 +165,6 @@ DA_ExportSettingsWidget::~DA_ExportSettingsWidget()
  */
 SignalIORequest DA_ExportSettingsWidget::generateExportRequest(MRun *run, bool stdev)
 {
-
     // --------------------------
     // generate export request
     // --------------------------
@@ -184,7 +198,46 @@ SignalIORequest DA_ExportSettingsWidget::generateExportRequest(MRun *run, bool s
         SignalIORequest irq;
         irq.itype = CSV;
 
-        irq.userData.insert(3,run->liiSettings().filename);
+        //QString runname = getRunname();
+
+        QString runname = run->getName();
+
+        QString testname = QString(exportDirectory() + runname + ".Signal.Volts.Ch%0.csv");
+
+        bool exists = false;
+
+        for(int i = 0; i < run->liiSettings().channels.size(); i++)
+            if(QFile(QString(testname).arg(i)).exists())
+                exists = true;
+
+        if(exists)
+        {
+            rq.userData.insert(20, true);
+
+            int count = 1;
+            testname = QString(exportDirectory() + runname + "_%0.Signal.Volts.Ch%1.csv");
+            bool filenameAvailable = false;
+            while(!filenameAvailable)
+            {
+                exists = false;
+                for(int i = 0; i < run->liiSettings().channels.size(); i++)
+                    if(QFile(QString(testname).arg(count).arg(i)).exists())
+                        exists = true;
+
+                if(exists)
+                    count++;
+                else
+                    filenameAvailable = true;
+            }
+
+            runname.append(QString("_%0").arg(count));
+            run->filename = runname;
+        }
+
+        irq.userData.insert(3, QString(runname).append("_settings.txt"));
+
+        qDebug() << "Generated run name:" << irq.userData.value(3).toString();
+
         irq.userData.insert(18, true); // [true] copy raw data to absolute data during import
         irq.noChannels = run->liiSettings().channels.size();
         irq.runsettings_dirpath = exportDirectory();
@@ -195,7 +248,7 @@ SignalIORequest DA_ExportSettingsWidget::generateExportRequest(MRun *run, bool s
             fi.itype = CSV;
             fi.filename = QString("%0%1.Signal.Volts.Ch%2.csv")
                     .arg(exportDirectory())
-                    .arg(run->getName())
+                    .arg(run->filename)
                     .arg(i+1);
             fi.channelId = i+1;
             fi.signalType = Signal::RAW;
@@ -207,7 +260,10 @@ SignalIORequest DA_ExportSettingsWidget::generateExportRequest(MRun *run, bool s
             {
                 SignalFileInfo fi;
                 fi.itype = CSV;
-                fi.filename = QString("%0%1.StandardDeviation.Raw.Ch%2.csv").arg(exportDirectory()).arg(run->getName()).arg(i+1);
+                fi.filename = QString("%0%1.StandardDeviation.Raw.Ch%2.csv")
+                        .arg(exportDirectory())
+                        .arg(run->filename)
+                        .arg(i+1);
                 fi.channelId = i+1;
                 fi.signalType = Signal::RAW;
                 fi.stdevFile = true;
@@ -240,16 +296,6 @@ SignalIOType DA_ExportSettingsWidget::exportType()
 
 
 /**
- * @brief DA_ExportSettingsWidget::runName Returns runname
- * @return
- */
-QString DA_ExportSettingsWidget::runName()
-{
-    return item(3,1)->text();
-}
-
-
-/**
  * @brief DA_ExportSettingsWidget::exportDirectory Returns export directory
  * @return
  */
@@ -262,15 +308,25 @@ QString DA_ExportSettingsWidget::exportDirectory()
 }
 
 
-/**
- * @brief DA_ExportSettingsWidget::generateRunName generates a
- * new measurement run name based on current date/time
- */
-void DA_ExportSettingsWidget::generateRunName()
+QString DA_ExportSettingsWidget::getRunname()
 {
-    //QString runname = QDateTime::currentDateTime().toString("ddd-MMM-yyyy_hh-mm-ss");
-    QString runname = QDateTime::currentDateTime().toString("yyyy-MM-dd_hh-mm-ss");
-    item(3,1)->setText(runname);
+    if(checkBoxAutoRefreshFileName->isChecked())
+    {
+        QString runname;
+
+        if(comboboxNameFormat->currentText().contains("Run name"))
+            runname.append(lineeditRunname->text());
+
+        if(!runname.isEmpty())
+            runname.append("_");
+
+        if(comboboxNameFormat->currentText().contains("YYYY-MM-DD_HH-MM-SS"))
+            runname.append(QDateTime::currentDateTime().toString("yyyy-MM-dd_hh-mm-ss"));
+
+        return runname;
+    }
+    else
+        return lineeditRunname->text();
 }
 
 
@@ -282,15 +338,6 @@ void DA_ExportSettingsWidget::generateRunName()
 bool DA_ExportSettingsWidget::autoSave()
 {
     return checkBoxAutoSave->isChecked();
-}
-
-/**
- * @brief DA_ExportSettingsWidget::autoRefresh checks if auto refresh is checked, if yes refreshes filename
- */
-void DA_ExportSettingsWidget::autoRefresh()
-{
-    if(checkBoxAutoRefreshFileName->isChecked())
-        generateRunName();
 }
 
 
@@ -354,6 +401,10 @@ void DA_ExportSettingsWidget::onGuiSettingsChanged()
     checkBoxAutoSave->setChecked(g->value("da","autosave",false).toBool());
     checkBoxAutoRefreshFileName->setChecked(g->value("da","autorefresh",false).toBool());
 
+    onAutoRefreshStateChanged(g->value("da","autorefresh",false).toBool()?Qt::Checked:Qt::Unchecked);
+    onAutoSaveStateChanged(g->value("da","autosave",false).toBool()?Qt::Checked:Qt::Unchecked);
+
+    lineeditRunname->setText(g->value("da", "runname", "Run").toString());
 }
 
 
@@ -372,11 +423,16 @@ void DA_ExportSettingsWidget::onAutoSaveStateChanged(int state)
     cbExpType->setEnabled(state);
     checkBoxAutoRefreshFileName->setEnabled(state);
     checkboxSaveStdev->setEnabled(state);
+    comboboxNameFormat->setEnabled(state);
 
     if(checkBoxAutoSave->isChecked())
     {
         item(3,0)->setFlags(Qt::ItemIsEnabled);
-        item(3,1)->setFlags(Qt::ItemIsEnabled | Qt::ItemIsEditable);
+        //item(3,1)->setFlags(Qt::ItemIsEnabled | Qt::ItemIsEditable);
+        if(checkBoxAutoRefreshFileName->isChecked())
+            lineeditRunname->setEnabled(comboboxNameFormat->currentText().contains("Run name"));
+        else
+            lineeditRunname->setEnabled(true);
 
         item(4,0)->setFlags(Qt::ItemIsEnabled);
         item(4,1)->setFlags(Qt::ItemIsEnabled);
@@ -386,7 +442,8 @@ void DA_ExportSettingsWidget::onAutoSaveStateChanged(int state)
     else
     {
         item(3,0)->setFlags(0);
-        item(3,1)->setFlags(0);
+        //item(3,1)->setFlags(0);
+        lineeditRunname->setEnabled(false);
 
         item(4,0)->setFlags(0);
         item(4,1)->setFlags(0);
@@ -404,11 +461,21 @@ void DA_ExportSettingsWidget::onAutoSaveStateChanged(int state)
 void DA_ExportSettingsWidget::onAutoRefreshStateChanged(int state)
 {
     Core::instance()->guiSettings->setValue("da","autorefresh",checkBoxAutoRefreshFileName->isChecked());
+    comboboxNameFormat->setEnabled(state);
+    if(state == Qt::Unchecked)
+        lineeditRunname->setEnabled(true);
+    else
+        onComboboxDynamicRunnameChanged(comboboxNameFormat->currentText());
 }
 
 
-void DA_ExportSettingsWidget::refreshRunName(int r,int c)
+void DA_ExportSettingsWidget::onComboboxDynamicRunnameChanged(QString item)
 {
-    if(r == 3 && c == 0)
-        generateRunName();
+    lineeditRunname->setEnabled(item.contains("Run name"));
+}
+
+
+void DA_ExportSettingsWidget::onLineeditRunnameChanged(QString text)
+{
+    Core::instance()->guiSettings->setValue("da", "runname", text);
 }

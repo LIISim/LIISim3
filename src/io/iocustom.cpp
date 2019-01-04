@@ -344,8 +344,8 @@ void IOcustom::checkFiles()
                 QFileInfo fi(settingsFile);
                 if(fi.exists())
                 {
-                    request.userData.insert(30, true);
-                    request.userData.insert(31, request.runsettings_filename);
+                    //request.userData.insert(30, true);
+                    //request.userData.insert(31, request.runsettings_filename);
 
                     MRunSettings ms(settingsFile);
 
@@ -354,6 +354,9 @@ void IOcustom::checkFiles()
                         request.userData.insert(3, ms.liiSettingsFname());
                         LIISettings mls = IOBase::getLIISettings(request);
                     }
+
+                    request.userData.insert(30, true);
+                    request.userData.insert(31, ms.runName());
                 }
 
                 requestList.push_back(request);
@@ -422,8 +425,8 @@ void IOcustom::checkFiles()
             QFileInfo fi(settingsFile);
             if(fi.exists())
             {
-                request.userData.insert(30, true);
-                request.userData.insert(31, request.runsettings_filename);
+                //request.userData.insert(30, true);
+                //request.userData.insert(31, request.runsettings_filename);
 
                 MRunSettings ms(settingsFile);
 
@@ -432,6 +435,9 @@ void IOcustom::checkFiles()
                     request.userData.insert(3, ms.liiSettingsFname());
                     LIISettings mls = IOBase::getLIISettings(request);
                 }
+
+                request.userData.insert(30, true);
+                request.userData.insert(31, ms.runName());
             }
 
             requestList.push_back(request);

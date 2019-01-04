@@ -2,6 +2,8 @@
 #include "../../general/LIISimException.h"
 #include "../../database/databasemanager.h"
 #include <QHeaderView>
+#include <QMessageBox>
+#include "dbelementnamedialog.h"
 
 MaterialEditor::MaterialEditor(QWidget *parent) :  DbEditorWidget(parent)
 {
@@ -19,52 +21,13 @@ MaterialEditor::MaterialEditor(QWidget *parent) :  DbEditorWidget(parent)
     lay_props->addWidget(table,      2, 0, 1, 5);
     lay_props->addWidget(lbl_calc,   3, 0, 1, 5);
     lay_props->addWidget(table_calc, 4, 0, 1, 5);
-}
 
-
-void MaterialEditor::setDatabaseManager(DatabaseManager *dbm)
-{
-    DbEditorWidget::setDatabaseManager(dbm);
-    db_data = dbm->getMaterials();
-}
-
-
-void MaterialEditor::initData()
-{
-   DbEditorWidget::initData();
-}
-
-
-void MaterialEditor::onSelectionChanged(const QItemSelection &selection)
-{
-    DbEditorWidget::onSelectionChanged(selection);
-    updateCurrentView();
-}
-
-void MaterialEditor::updateCurrentView()
-{
-    if(db_data->size()==0)
-        return;
-
-    Material* dbi = dbm->getMaterial(currentIndex);
-
-    // set number of rows
-    int no_props = 14 + dbi->Em.values.size();
-    int no_calc = 6;
-
-    // font
-    QFont ifont;
-    ifont.setItalic(true);
-    ifont.setBold(true);
-
-    // reset tables
-    table->clear();
-    table_calc->clear();
-
+    _rowDataChanged = false;
+    _blockInit = false;
+    _emRowStart = 0;
 
     // setup table properties
-    table->setColumnCount(14);
-    table->setRowCount(no_props);
+    table->setColumnCount(15);
 
     table->setColumnWidth(0, 80); // name
     table->setColumnWidth(1, 80); // type
@@ -76,7 +39,7 @@ void MaterialEditor::updateCurrentView()
     table->setColumnWidth(a++, 60);  // unit
     table->setColumnWidth(a++, 400); // equation
     table->setColumnWidth(a++, 300);
-
+    table->setColumnWidth(a++, 20);
 
     QStringList columnNames;
     columnNames << "Property"
@@ -89,12 +52,153 @@ void MaterialEditor::updateCurrentView()
                 << QString("a%0").arg(QChar(0x2085))
                 << QString("a%0").arg(QChar(0x2086))
                 << QString("a%0").arg(QChar(0x2087))
-                << QString("a%0").arg(QChar(0x2088))                
-                << "Unit" << "Equation" << "Source";
+                << QString("a%0").arg(QChar(0x2088))
+                << "Unit" << "Equation" << "Source" << "";
     table->setHorizontalHeaderLabels(columnNames);
 
     table->verticalHeader()->setVisible(false);
+}
 
+
+void MaterialEditor::setDatabaseManager(DatabaseManager *dbm)
+{
+    DbEditorWidget::setDatabaseManager(dbm);
+    db_data = dbm->getMaterials();
+}
+
+
+void MaterialEditor::initData()
+{
+    if(!_blockInit && !(_rowDataChanged = false))
+        DbEditorWidget::initData();
+}
+
+
+void MaterialEditor::onSelectionChanged(const QItemSelection &selection)
+{
+    if(_rowDataChanged)
+    {
+        int ret = QMessageBox::warning(this, "LIISim3 Database Editor",
+                  "The currently selected material entry has been modified.\n"
+                  "Do you want to apply your changes?",
+                  QMessageBox::Save | QMessageBox::Discard, QMessageBox::Discard);
+
+        if(ret == QMessageBox::Save)
+        {
+            _blockInit = true;
+            onApplyChanges();
+            _blockInit = false;
+        }
+        _rowDataChanged = false;
+    }
+
+    DbEditorWidget::onSelectionChanged(selection);
+    updateCurrentView();
+}
+
+void MaterialEditor::updateCurrentView()
+{
+    if(db_data->size()==0)
+        return;
+
+    if(_rowDataChanged)
+    {
+        int ret = QMessageBox::warning(this, "LIISim3 Database Editor",
+                  "The currently selected material entry has been modified.\n"
+                  "Do you want to apply your changes?",
+                  QMessageBox::Save | QMessageBox::Discard, QMessageBox::Discard);
+
+        if(ret == QMessageBox::Save)
+        {
+            _blockInit = true;
+            onApplyChanges();
+            _blockInit = false;
+        }
+        _rowDataChanged = false;
+    }
+
+    Material* dbi = dbm->getMaterial(currentIndex);
+
+    // set number of rows
+    int no_props = 14 + dbi->Em.values.size() + 1;
+
+    // reset tables
+    table->clearContents();
+    table->setRowCount(no_props);
+
+    // table properties
+    int k = 0;
+
+    while(!_tableRows.isEmpty())
+    {
+        DBETableRowElement *row = _tableRows.takeFirst();
+        disconnect(row, SIGNAL(dataChanged()), this, SLOT(onRowDataChanged()));
+        delete row;
+    }
+
+    while(!_emTableRows.isEmpty())
+    {
+        DBETableRowElement *row = _emTableRows.takeFirst();
+        disconnect(row, SIGNAL(dataChanged()), this, SLOT(onEmRowDataChanged()));
+        disconnect(row, SIGNAL(deleteRequested()), this, SLOT(onEmRowDeleteRequest()));
+        delete row;
+    }
+
+    QStringList types = Property::eqTypeList;
+    types.removeLast();
+
+    _tableRows.push_back(DBETableRowElement::buildTableRow(*table, dbi->alpha_T_eff, types, k++));
+    _tableRows.push_back(DBETableRowElement::buildTableRow(*table, dbi->C_p_mol, types, k++));
+    _tableRows.push_back(DBETableRowElement::buildTableRow(*table, dbi->H_v, types, k++));
+    _tableRows.push_back(DBETableRowElement::buildTableRow(*table, dbi->molar_mass, types, k++));
+    _tableRows.push_back(DBETableRowElement::buildTableRow(*table, dbi->molar_mass_v, types, k++));
+    _tableRows.push_back(DBETableRowElement::buildTableRow(*table, dbi->rho_p, types, k++));
+    _tableRows.push_back(DBETableRowElement::buildTableRow(*table, dbi->theta_e, types, k++));
+    _tableRows.push_back(DBETableRowElement::buildTableRow(*table, dbi->p_v, types, k++));
+    _tableRows.push_back(DBETableRowElement::buildTableRow(*table, dbi->p_v_ref, types, k++));
+    _tableRows.push_back(DBETableRowElement::buildTableRow(*table, dbi->T_v_ref, types, k++));
+    _tableRows.push_back(DBETableRowElement::buildTableRow(*table, dbi->eps, types, k++));
+    _tableRows.push_back(DBETableRowElement::buildTableRow(*table, dbi->Em_func, types, k++));
+    _tableRows.push_back(DBETableRowElement::buildTableRow(*table, dbi->omega_p, types, k++));
+    _tableRows.push_back(DBETableRowElement::buildTableRow(*table, dbi->tau, types, k++));
+
+    //_emValues = QMap<int, Property>(dbi->Em.values);
+    _emRowStart = k;
+
+    _emValues.clear();
+    for(auto &prop : dbi->Em.values)
+        _emValues.push_back(prop.second);
+
+    for(auto &prop : _emValues)
+        _emTableRows.push_back(DBETableRowElement::buildTableRow(*table, prop, types, k++, true));
+
+    for(auto row : _tableRows)
+        connect(row, SIGNAL(dataChanged()), SLOT(onRowDataChanged()));
+
+    for(auto row : _emTableRows)
+        connect(row, SIGNAL(dataChanged()), SLOT(onEmRowDataChanged()));
+
+    for(auto row : _emTableRows)
+        connect(row, SIGNAL(deleteRequested()), SLOT(onEmRowDeleteRequest()));
+
+    QToolButton *button = new QToolButton();
+    button->setText("+ Em");
+
+    table->setCellWidget(k++, 0, button);
+
+    connect(button, SIGNAL(clicked(bool)), SLOT(onEmRowAddRequest()));
+
+    updateCalculatedProperties();
+}
+
+
+void MaterialEditor::updateCalculatedProperties()
+{
+    Material* dbi = dbm->getMaterial(currentIndex);
+
+    int no_calc = 6;
+
+    table_calc->clear();
 
     // setup table calc
     table_calc->setColumnCount(4);
@@ -104,7 +208,7 @@ void MaterialEditor::updateCurrentView()
     table_calc->setColumnWidth(3, 400); // descriptions
     table_calc->setRowCount(no_calc);
 
-    columnNames.clear();
+    QStringList columnNames;
     columnNames << "Property" << "Value"
                 << "Unit" << "Description";
 
@@ -112,38 +216,13 @@ void MaterialEditor::updateCurrentView()
 
     table_calc->verticalHeader()->setVisible(false);
 
-
-    // table properties
-    int k = 0;
-
-    showPropertyInRow(dbi->alpha_T_eff, k++);
-    showPropertyInRow(dbi->C_p_mol, k++);
-
-    showPropertyInRow(dbi->H_v, k++);
-    showPropertyInRow(dbi->molar_mass, k++);
-    showPropertyInRow(dbi->molar_mass_v, k++);
-
-    showPropertyInRow(dbi->rho_p, k++);
-
-    showPropertyInRow(dbi->theta_e, k++);
-
-    showPropertyInRow(dbi->p_v, k++);
-    showPropertyInRow(dbi->p_v_ref, k++);
-    showPropertyInRow(dbi->T_v_ref, k++);
-
-    showPropertyInRow(dbi->eps, k++);
-    showPropertyInRow(dbi->Em_func, k++);
-
-    showPropertyInRow(dbi->omega_p, k++);
-    showPropertyInRow(dbi->tau, k++);
-
-    showOpticalPropertyInRow(dbi->Em, k);
-    k++;
-
-    //qDebug() << "MaterialEditor: " << dbi->molar_mass_v(3000);
+    // font
+    QFont ifont;
+    ifont.setItalic(true);
+    ifont.setBold(true);
 
     // table calculated properties (from Material::functions)
-    k = 0;
+    int k = 0;
     QTableWidgetItem* item0;
 
     // if individual vapor pressure formula is given:
@@ -313,12 +392,12 @@ void MaterialEditor::showPropertyInRow(const Property &prop, int row)
 
     table->setItem(row, a++, item3); // unit
 
-    QLabel* eqw = dbm->eqList->defaultEq(prop.type);
-    table->setCellWidget(row, a++, eqw); // equation
+    //QLabel* eqw = dbm->eqList->defaultEq(prop.type);
+    //table->setCellWidget(row, a++, eqw); // equation
 
-    table->setItem(row, a++, item4); // source
+    //table->setItem(row, a++, item4); // source
 
-    table->setRowHeight(row, eqw->size().height());
+    //table->setRowHeight(row, eqw->size().height());
 }
 
 
@@ -344,10 +423,20 @@ void MaterialEditor::onApplyChanges()
         MSG_STATUS("no item selected. Add item to list first");
         return;
     }
-
     DbEditorWidget::onApplyChanges();
 
     Material* modMaterial = dbm->getMaterial(currentIndex);
+
+    for(auto row : _tableRows)
+        row->savePropertyParameters();
+
+    for(auto row : _emTableRows)
+        row->savePropertyParameters();
+
+    modMaterial->Em.values.clear();
+
+    for(auto em : _emValues)
+        modMaterial->Em.values.insert(std::pair<int, Property>((int)em.parameter[0], em));
 
     QString oldfname = modMaterial->filename;
     QString newfname = leFname->text();
@@ -365,11 +454,12 @@ void MaterialEditor::onApplyChanges()
         modMaterial->description = leDescr->text().toLatin1().data();
 
         dbm->modifiedContent(modMaterial);
-        QString msg = "apllied changes to: "+newfname;
+        QString msg = QString("Applied changes to: %0 (%1)").arg(modMaterial->name).arg(newfname);
         MSG_STATUS(msg);
-        if(newfname != oldfname){
+        if(newfname != oldfname)
+        {
             dbm->deleteFile(oldfname.toLatin1().data());
-            msg.append(" deleted: "+oldfname);
+            msg.append(", deleted: "+oldfname);
             MSG_STATUS(msg);
         }
 
@@ -379,7 +469,6 @@ void MaterialEditor::onApplyChanges()
     }
     catch(LIISimException e)
     {
-
         MSG_STATUS(e.what());
         qDebug() << e.what();
     }
@@ -388,33 +477,87 @@ void MaterialEditor::onApplyChanges()
 
 void MaterialEditor::onAddItemToList()
 {
-    DbEditorWidget::onAddItemToList();
-
-    // get filename
-
-    QString fname = getValidDefaultFileName();
-
-    try
+    DBElementNameDialog nameDialog(typeid(Material), this);
+    nameDialog.setWindowTitle("Enter name for new material database entry");
+    nameDialog.setDefault("DefaultMaterial");
+    if(nameDialog.exec() == 1)
     {
-         Material* m = new Material;
-         m->name = defaultName.toLatin1().data();
-         m->filename = fname.toLatin1().data();
-         dbm->addContentToDB(m);
+        try
+        {
+            Material *m = new Material;
+            m->name = nameDialog.getName();
+            m->filename = nameDialog.getUniqueFilename(Core::instance()->generalSettings->databaseDirectory().toLatin1().data(), ".txt");
 
-        MSG_STATUS("added: "+fname);
-    }
-    catch(LIISimException e)
-    {
-        MSG_STATUS(e.what());
-        butAdd->setEnabled(true);
-    }
+            dbm->addContentToDB(m);
 
-   // updateView();
-    butAdd->setEnabled(true);
+            MSG_STATUS(QString("Database entry added: %0 (%1)").arg(m->name).arg(m->filename));
+        }
+        catch(LIISimException &e)
+        {
+            MSG_STATUS(e.what());
+            MSG_ERR(e.what());
+        }
+    }
 }
 
 
 void MaterialEditor::onRemoveCurrentSelectionFromList()
 {
     DbEditorWidget::onRemoveCurrentSelectionFromList();
+}
+
+
+void MaterialEditor::onRowDataChanged()
+{
+    DbEditorWidget::onValueEdited("");
+    _rowDataChanged = true;
+}
+
+
+void MaterialEditor::onEmRowDataChanged()
+{
+    onRowDataChanged();
+}
+
+
+void MaterialEditor::onEmRowDeleteRequest()
+{
+    int idx = _emTableRows.indexOf(static_cast<DBETableRowElement*>(QObject::sender()));
+    if(idx != -1)
+    {
+        for(auto row : _emTableRows)
+            row->savePropertyParameters();
+
+        DBETableRowElement *row = _emTableRows.takeAt(idx);
+        table->removeRow(_emRowStart + idx);
+        _emValues.removeAt(idx);
+
+        delete row;
+    }
+    onRowDataChanged();
+}
+
+
+void MaterialEditor::onEmRowAddRequest()
+{
+    QStringList types = Property::eqTypeList;
+    types.removeLast();
+
+    table->insertRow(table->rowCount()-1);
+
+    Property prop;
+    prop.type = "optics_case";
+    prop.name = "Em";
+    prop.unit = "[-]";
+    prop.source = "";
+    prop.inFile = true;
+    prop.available = true;
+
+    _emValues.push_back(prop);
+    _emTableRows.push_back(DBETableRowElement::buildTableRow(*table, _emValues.last(), types, table->rowCount()-2, true));
+
+    connect(_emTableRows.last(), SIGNAL(dataChanged()), SLOT(onEmRowDataChanged()));
+    connect(_emTableRows.last(), SIGNAL(deleteRequested()), SLOT(onEmRowDeleteRequest()));
+
+    onRowDataChanged();
 }

@@ -52,9 +52,9 @@ bool MRunSettings::save(const QString &dirpath)
         return false;
 
     // generate filename from dirpath and run name
-    //QString fname = QString("%0%1_settings.txt").arg(dirpath).arg(run->getName());
+    QString fname = QString("%0%1_settings.txt").arg(dirpath).arg(run->filename);
 
-    QString fname = QString(dirpath).append(run->filename);
+    //QString fname = QString(dirpath).append(run->filename);
 
     QSettings qs(fname,QSettings::IniFormat);
 
@@ -83,9 +83,7 @@ bool MRunSettings::save(const QString &dirpath)
     for(int i = 0; i < run->getNoChannels(Signal::RAW); i++)
         qs.setValue(QString("ps_range_channel_%0").arg(i+1), QString::number(run->psRange(i+1)));
 
-    qs.setValue("ps_range", PicoScopeCommon::PSRangeToInt(run->psRange()));
     qs.setValue("ps_coupling", PicoScopeCommon::PSCouplingToInt(run->psCoupling()));
-    qs.setValue("ps_offset", run->psOffset());
 
     for(int i = 0; i < run->getNoChannels(Signal::RAW); i++)
         qs.setValue(QString("ps_offset_channel_%0").arg(i+1), QString::number(run->psOffset(i+1)));
@@ -125,12 +123,11 @@ bool MRunSettings::load(const QString &dirpath)
 {
     QString fname;
     if(run)
-    {
-        //fname = QString("%0%1_settings.txt").arg(dirpath).arg(run->getName());
-        fname = QString(dirpath).append(run->filename);
-    }
+        fname = QString("%0%1_settings.txt").arg(dirpath).arg(run->filename);
     else
         fname = dirpath;
+
+    //qDebug() << "MRunSettings::load::fname - " << fname;
 
     QFileInfo fi(fname);
     if(!fi.exists())
@@ -156,13 +153,13 @@ bool MRunSettings::load(const QString &dirpath)
 
     QString str = qs.value("name","").toString();
     if(!str.isEmpty())
-        run->setName(str);
+        run->setName(str, true);
 
     str = qs.value("liisettings","").toString();
     int idx = Core::instance()->getDatabaseManager()->indexOfLIISettings(str);
     if(idx > -1)
     {
-        run->setLiiSettings(*Core::instance()->getDatabaseManager()->getLIISetting(idx));
+        run->setLiiSettings(*Core::instance()->getDatabaseManager()->getLIISetting(idx), true);
         //qDebug() << "MRunSettings: set run's liisettings" << run->getName() << "->" << run->liiSettings().filename;
     }
     else
@@ -177,11 +174,12 @@ bool MRunSettings::load(const QString &dirpath)
 
     str = qs.value("description","").toStringList().join(",");
     if(!str.isEmpty())
-        run->setDescription(str);
+        //run->setDescription(str);
+        run->setData(3, str);
 
     //qDebug() << str;
 
-    run->setLaserFluence(qs.value("laser_fluence","0.0").toDouble());
+    run->setLaserFluence(qs.value("laser_fluence","0.0").toDouble(), true);
 
     str = qs.value("filter","").toString();
 
@@ -210,7 +208,7 @@ bool MRunSettings::load(const QString &dirpath)
 
 
     if(!str.isEmpty())
-        run->setFilter(str);
+        run->setFilter(str, true);
 
     // handle "filter not set" state
     // This means that no filter settings have been defined during
@@ -222,7 +220,7 @@ bool MRunSettings::load(const QString &dirpath)
         || str.compare("not set",Qt::CaseInsensitive) == 0
         || str.compare(Filter::filterNotSetIdentifier,Qt::CaseInsensitive) == 0)
     {
-        run->setFilter(Filter::filterNotSetIdentifier);
+        run->setFilter(Filter::filterNotSetIdentifier, true);
     }
 
     int noch = run->getNoChannels(Signal::RAW);
@@ -230,7 +228,7 @@ bool MRunSettings::load(const QString &dirpath)
     {
         QString k = QString("pmt_gain_voltage_channel_%0").arg(i+1);
         if(keys.contains(k))
-            run->setPmtGainVoltage(i+1,qs.value(k,0.0).toDouble());       
+            run->setPmtGainVoltage(i+1,qs.value(k,0.0).toDouble(), true);
     }
 
 
@@ -259,8 +257,6 @@ bool MRunSettings::load(const QString &dirpath)
             run->setPSRange(i+1, qs.value(str, 0.0).toDouble());
     }
 
-    run->setPSRange(PicoScopeCommon::intToPSRange(qs.value("ps_range", "0").toUInt()));
-
     //if we have an old file with only a single ps_range parameter, we set all range parameters accordingly
     double range = 0.0;
     for(int i = 0; i < run->getNoChannels(Signal::RAW); i++)
@@ -268,16 +264,8 @@ bool MRunSettings::load(const QString &dirpath)
         if(run->psRange(i+1) > range)
             range = run->psRange(i+1);
     }
-    if(range == 0.0 || run->psRange() != PSRange::NONE)
-    {
-        for(int i = 0; i < run->getNoChannels(Signal::RAW); i++)
-        {
-            run->setPSRange(i+1, PicoScopeCommon::PSRangeToDouble(run->psRange()));
-        }
-    }
 
     run->setPSCoupling(PicoScopeCommon::intToPSCoupling(qs.value("ps_coupling", "0").toUInt()));
-    run->setPSOffset(qs.value("ps_offset", "0").toDouble());
 
     for(int i = 0; i < run->getNoChannels(Signal::RAW); i++)
     {
@@ -405,7 +393,7 @@ double MRunSettings::ps_collectionTime()
 }
 
 
-double MRunSettings::ps_sampleIntervall()
+double MRunSettings::ps_sampleInterval()
 {
     return settings.value("ps_si", "0.0").toDouble();
 }

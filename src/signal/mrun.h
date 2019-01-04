@@ -21,7 +21,6 @@ class ProcessingChain;
 class MRunGroup;
 class TemperatureProcessingChain;
 
-
 /**
  * @brief Measurement Run
  * @ingroup Hierachical-Data-Model
@@ -45,9 +44,9 @@ class TemperatureProcessingChain;
  */
 class MRun : public DataItem
 {
+    enum class UserChangableSettingTypes;
     Q_OBJECT
 private:
-
     /** @brief laser fluence [mJ/mm^2] */
     double m_laserFluence;
 
@@ -99,14 +98,9 @@ private:
     /** @brief list of temperature channel ids */
     QList<int> temperatureChannelIDs;
 
-
     //PicoScope parameter
 
-    /** @brief selected picoscope range at capturing time in volts (+-)*/
-    //double ps_range;
-
-    PSRange ps_range;
-
+    /** @brief selected picoscope range at capturing time in volts (+-) for active channels*/
     QVector<double> m_psRange;
 
     /** @brief selected picoscope coupling at capturing time
@@ -114,13 +108,9 @@ private:
      *                          dc = true + 50r = false : DC 1 MOhm
      *                          dc = true + 50r = true  : DC 50 Ohm
      */
-    //bool ps_coupling_dc;
-    //bool ps_coupling_50r;
-
     PSCoupling ps_coupling;
 
     /** @brief picoscope offset in volts (+-) */
-    double ps_offset;
     QVector<double> m_psOffset;
 
     /** @brief collection time in seconds */
@@ -138,36 +128,51 @@ private:
 
     double laserSetpoint;
 
+    QList<UserChangableSettingTypes> _changedSettings;
+
 public:
+    enum class UserChangableSettingTypes
+    {
+        Name,
+        Description,
+        LaserFluence,
+        LIISettings,
+        NDFilter,
+        PMTChannelGain,
+        UserDefinedParameters
+    };
+
     MRun(QString name, int channelCount_raw_abs, MRunGroup* group = 0);
     MRun(QString name, QString filename, int channelCount_raw_abs, MRunGroup *group = 0);
+    MRun(QString name, QString filename, QString filenameBase, int channelCount_raw_abs, MRunGroup *group = 0);
     virtual ~MRun();
-
 
     /** @brief name of Measurement Run */
     QString name;
 
     QString filename;
 
+    QString filenameBase;
+
     QString getName();
-    void setName(const QString & name);
+    void setName(const QString &name, bool blockChangeNotify = false);
     int getNoChannels(Signal::SType stype);
 
     MRunGroup* group();
 
-    void setDescription(const QString & descr);
+    void setDescription(const QString &descr, bool blockChangeNotify = false);
     QString description();
 
-    void setLaserFluence(double laserFluence);
+    void setLaserFluence(double laserFluence, bool blockChangeNotify = false);
     double laserFluence();
 
-    void setPmtGainVoltage(int channelID, double voltage);
+    void setPmtGainVoltage(int channelID, double voltage, bool blockChangeNotify = false);
     double pmtGainVoltage(int channelID);
 
     void setPmtReferenceGainVoltage(int channelID, double voltage);
     double pmtReferenceGainVoltage(int channelID);
 
-    bool setFilter(const QString & transmission);
+    bool setFilter(const QString & transmission, bool blockChangeNotify = false);
     QString filterIdentifier();
     Filter filter();
 
@@ -191,7 +196,6 @@ public:
     int getRealIdxFromValidList(int validListIdx);
     int sizeValidMpoints();
 
-
     void updateValidList();
 
     void copyProcessingStepsFrom(MRun* mrun);
@@ -208,27 +212,13 @@ public:
     bool isValidChannelID(int id, Signal::SType stype);
 
     LIISettings liiSettings();
-    void setLiiSettings(const LIISettings& liiSettings);
-
-    //double psRange(){return ps_range;}
-    //void setPSRange(double range){ps_range = range;}
-
-    PSRange psRange(){return ps_range;}
-    void setPSRange(PSRange range){ps_range = range;}
+    void setLiiSettings(const LIISettings& liiSettings, bool blockChangeNotify = false);
 
     double psRange(int channelID);
     void setPSRange(int channelID, double range);
 
-    //bool psCouplingDC(){return ps_coupling_dc;}
-    //bool psCoupling50R(){return ps_coupling_50r;}
-    //void setPSCouplingDC(bool coupling_dc){ps_coupling_dc = coupling_dc;}
-    //void setPSCoupling50R(bool coupling_50r){ps_coupling_50r = coupling_50r;}
-
     PSCoupling psCoupling(){return ps_coupling;}
     void setPSCoupling(PSCoupling coupling){ps_coupling = coupling;}
-
-    double psOffset(){return ps_offset;}
-    void setPSOffset(double offset){ps_offset = offset;}
 
     double psOffset(int channelID);
     void setPSOffset(int channelID, double offset);
@@ -255,6 +245,13 @@ public:
 
     // index: Temperature-Channel ID
     QMap<int, TempCalcMetadata> tempMetadata;
+
+    QList<UserChangableSettingTypes> getChangedSettings() { return _changedSettings; }
+
+    bool unsavedSettings() { return !_changedSettings.isEmpty(); }
+    void setUDPChanged() { _changedSettings.push_back(UserChangableSettingTypes::UserDefinedParameters); }
+
+    bool saveCurrentRunSettings();
 
 signals:
 

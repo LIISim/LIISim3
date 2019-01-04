@@ -528,7 +528,8 @@ void SignalImportInfoElement::setRequest(SignalIORequest rq, LIISettings setting
         if(rq.userData.contains(30) && rq.userData.value(30).toBool())
         {
             if(rq.userData.contains(31))
-                addSettingsFile(rq.userData.value(31).toString());
+                addSettingsFile(QString(rq.runname.split("/").back()).append("_settings.txt"));
+                //addSettingsFile(rq.userData.value(31).toString());
 
             if(rq.userData.contains(3))
             {
@@ -552,7 +553,7 @@ void SignalImportInfoElement::setRequest(SignalIORequest rq, LIISettings setting
                         comboboxLIISettings->setCurrentGlobal();
                 }
                 else
-                    addError(QString("LIISettings defined in '%0' not found in database").arg(rq.runsettings_filename));
+                    addError(QString("LIISettings not found in database: '%0'").arg(request.userData.value(3).toString()));
             }
         }
         else

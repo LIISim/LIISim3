@@ -565,6 +565,8 @@ void IOxml::readMRun(QXmlStreamReader &r, MRunGroup* parentGroup)
     QString runname = a.value("name").toString();
     int noCh = a.value("noChannels").toInt();
     QString filename = a.value("filename").toString();
+    if(filename.contains("_settings.txt")) //legacy reasons
+        filename.remove("_settings.txt");
 
     MRun* mr = new MRun(runname, filename, noCh);
 
@@ -599,7 +601,7 @@ void IOxml::readMRun(QXmlStreamReader &r, MRunGroup* parentGroup)
                 irq.noChannels = noCh;
                 irq.runsettings_filename = filename;
                 irq.run_id =mr->id();
-                mr->setLiiSettings(getLIISettings(irq));
+                mr->setLiiSettings(getLIISettings(irq), true);
 
                 m_generatedRequests.append(irq);
             }

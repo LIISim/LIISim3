@@ -10,6 +10,7 @@ MaterialComboBox::MaterialComboBox(QWidget *parent) : LabeledComboBox(parent)
     layMainH->removeWidget(description);
 
     mute = false;
+    disconnected = false;
 
     setToolTip("Material used for temperature signal calculation");
 
@@ -36,9 +37,19 @@ MaterialComboBox::~MaterialComboBox()
 }
 
 
+void MaterialComboBox::disconnectFromGlobal()
+{
+    disconnect(Core::instance()->modelingSettings,
+               SIGNAL(materialSpecChanged()), this,
+               SLOT(onModelingSettingsChanged()));
+
+    disconnected = true;
+}
+
+
 void MaterialComboBox::onCurrentIndexChanged(int idx)
 {
-    if(mute)
+    if(mute || disconnected)
         return;
 
     MSG_ONCE_RESET_GROUP("SpectroscopicMaterial");

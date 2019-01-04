@@ -34,7 +34,6 @@ protected:
     DatabaseManager* dbm;
     QList<DatabaseContent*>* db_data;
 
-
     // GUI ELEMENTS
     QGridLayout* lay_props;
     QVBoxLayout* lay_right_box;
@@ -58,19 +57,19 @@ protected:
 
     QPushButton* bOpen;
     QPushButton* bApply;
+    QLabel *labelUnsavedChanges;
 
     void createDirForFile(const QString & fname);
     QString getValidDefaultFileName();
 
+    bool _unsavedChanges;
+
 public:
     virtual void setDatabaseManager(DatabaseManager *dbm);
 
-
     explicit DbEditorWidget(QWidget *parent = 0);
 
-
-signals:
-
+    bool hasUnsavedChanges();
 
 public slots:
 

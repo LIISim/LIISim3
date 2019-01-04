@@ -65,6 +65,7 @@ public:
 
     static const QString LIISIM_VERSION;
     static const bool LIISIM_VERSION_PRE;
+    static const bool LIISIM_LARGE_FONTS;
 
     static Core* instance()
     {

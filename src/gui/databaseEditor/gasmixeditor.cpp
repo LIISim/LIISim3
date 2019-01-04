@@ -9,10 +9,12 @@
 //#include <qevent.h>
 
 #include <gui/utils/mathml/equationlist.h>
+#include "dbelementnamedialog.h"
+#include <QMessageBox>
 
 GasMixEditor::GasMixEditor(QWidget *parent) :   DbEditorWidget(parent)
 {
-    db_data = NULL;
+    db_data = nullptr;
     defaultFileName = "gasmixtures/newGasMixture";
     defaultName = "new Gas Mixture";
     table_gases = new QTableWidget;
@@ -22,7 +24,7 @@ GasMixEditor::GasMixEditor(QWidget *parent) :   DbEditorWidget(parent)
     table_props->setWordWrap(true);
 
 
-    table_gases->setMaximumHeight(100);
+    table_gases->setMaximumHeight(150);
     table_props->setMaximumHeight(150);
 
     QLabel* lbl_props = new QLabel("Properties (manually set):");
@@ -36,6 +38,22 @@ GasMixEditor::GasMixEditor(QWidget *parent) :   DbEditorWidget(parent)
     lay_props->addWidget(table_props, 4, 0, 1, 5);
     lay_props->addWidget(lbl_calc,   5, 0, 1, 5);
     lay_props->addWidget(table_calc,  6, 0, 1, 5);
+
+    // setup table gases
+    table_gases->setColumnCount(4);
+    table_gases->setColumnWidth(0, 180);
+    table_gases->setColumnWidth(1, 100);
+    table_gases->setColumnWidth(2, 60);
+    table_gases->setColumnWidth(3, 20);
+
+    QStringList columnNames;
+    columnNames << "Gas" << "Fraction" << "Unit" << "";
+    table_gases->setHorizontalHeaderLabels(columnNames);
+    table_gases->verticalHeader()->setVisible(false);
+
+    _rowDataChanged = false;
+    _blockInit = false;
+    _mixtureRow = nullptr;
 }
 
 
@@ -48,12 +66,29 @@ void GasMixEditor::setDatabaseManager(DatabaseManager *dbm)
 
 void GasMixEditor::initData()
 {
-    DbEditorWidget::initData();
+    if(!_blockInit && !(_rowDataChanged = false))
+        DbEditorWidget::initData();
 }
 
 
 void GasMixEditor::onSelectionChanged(const QItemSelection &selection)
 {
+    if(_rowDataChanged)
+    {
+        int ret = QMessageBox::warning(this, "LIISim3 Database Editor",
+                  "The currently selected gas mixture entry has been modified.\n"
+                  "Do you want to apply your changes?",
+                  QMessageBox::Save | QMessageBox::Discard, QMessageBox::Discard);
+
+        if(ret == QMessageBox::Save)
+        {
+            _blockInit = true;
+            onApplyChanges();
+            _blockInit = false;
+        }
+        _rowDataChanged = false;
+    }
+
     DbEditorWidget::onSelectionChanged(selection);
     updateCurrentView();
 }
@@ -68,12 +103,15 @@ void GasMixEditor::onApplyChanges()
     }
     DbEditorWidget::onApplyChanges();
 
+    _mixtureRow->saveParameters();
+
     GasMixture *modmix = dbm->getGasMixture(currentIndex);
 
     QString oldfname = modmix->filename;
     QString newfname = leFname->text();
 
-    try{
+    try
+    {
         for(int i=0;i<db_data->size();i++)
         {
             if(newfname != oldfname && db_data->at(i)->filename == newfname  )
@@ -86,10 +124,11 @@ void GasMixEditor::onApplyChanges()
 
         qDebug() << modmix->filename << " " << modmix->name;
         dbm->modifiedContent(modmix);
-        QString msg = " applied changes to: "+newfname;
+        QString msg = QString("Applied changes to: %0 (%1)").arg(modmix->name).arg(newfname);
         MSG_STATUS(msg);
 
-        if(newfname != oldfname){
+        if(newfname != oldfname)
+        {
             dbm->deleteFile(oldfname.toLatin1().data());
             msg.append(" deleted: "+oldfname);
             MSG_STATUS(msg);
@@ -99,7 +138,8 @@ void GasMixEditor::onApplyChanges()
         QModelIndex idx = listModel->index(currentIndex);
         listModel->setData(idx,leName->text());
 
-    }catch(LIISimException e)
+    }
+    catch(LIISimException e)
     {
 
         MSG_STATUS(e.what());
@@ -110,27 +150,27 @@ void GasMixEditor::onApplyChanges()
 
 void GasMixEditor::onAddItemToList()
 {
-    DbEditorWidget::onAddItemToList();
-
-    QString fname = getValidDefaultFileName();
-
-
-    try{
-         GasMixture* g = new GasMixture;
-         g->name = defaultName.toLatin1().data();
-         g->filename =  fname.toLatin1().data();
-         dbm->addContentToDB(g);
-
-         MSG_STATUS("added: "+fname);
-
-    }catch(LIISimException e)
+    DBElementNameDialog nameDialog(typeid(GasMixture), this);
+    nameDialog.setWindowTitle("Enter name for a new gas mixture database entry");
+    nameDialog.setDefault("DefaultGasMixture");
+    if(nameDialog.exec() == 1)
     {
-        MSG_STATUS(e.what());
-        qDebug() << e.what();
-        butAdd->setEnabled(true);
-    }
+        try
+        {
+            GasMixture* gm = new GasMixture;
+            gm->name = nameDialog.getName();
+            gm->filename = nameDialog.getUniqueFilename(Core::instance()->generalSettings->databaseDirectory().toLatin1().data(), ".txt");
 
-    butAdd->setEnabled(true);
+            dbm->addContentToDB(gm);
+
+            MSG_STATUS(QString("Database entry added: %0 (%1)").arg(gm->name).arg(gm->filename));
+        }
+        catch(LIISimException &e)
+        {
+            MSG_STATUS(e.what());
+            MSG_ERR(e.what());
+        }
+    }
 }
 
 
@@ -204,12 +244,12 @@ void GasMixEditor::showPropertyInRow(const Property& prop, int row)
 
     table_props->setItem(row, a++, item3); // unit
 
-    QLabel* eqw = dbm->eqList->defaultEq(prop.type);
-    table_props->setCellWidget(row, a++, eqw); // equation
+    //QLabel* eqw = dbm->eqList->defaultEq(prop.type);
+    //table_props->setCellWidget(row, a++, eqw); // equation
 
-    table_props->setItem(row, a++, item4); // source
+    //table_props->setItem(row, a++, item4); // source
 
-    table_props->setRowHeight(row, eqw->size().height());
+    //table_props->setRowHeight(row, eqw->size().height());
 }
 
 
@@ -225,31 +265,14 @@ void GasMixEditor::updateCurrentView()
 
     GasMixture* dbi = dbm->getGasMixture(currentIndex);
 
-
     // number of table rows
-    int no_gases = dbi->getNoGases();
+
     int no_props = 3;
     int no_calc = 9;
 
     // reset tables
-    table_gases->clear();
     table_props->clear();
     table_calc->clear();
-
-    // setup table gases
-    table_gases->setColumnCount(3);
-    table_gases->setRowCount(no_gases);
-
-    table_gases->setColumnWidth(0, 180);
-    table_gases->setColumnWidth(1, 100);
-    table_gases->setColumnWidth(2, 60);
-
-    QStringList columnNames;
-    columnNames << "Gas" << "Fraction" << "Unit";
-    table_gases->setHorizontalHeaderLabels(columnNames);
-
-    table_gases->verticalHeader()->setVisible(false);
-
 
     // setup table props
     table_props->setColumnCount(14);
@@ -266,7 +289,7 @@ void GasMixEditor::updateCurrentView()
     table_props->setColumnWidth(a++, 400);
     table_props->setRowCount(no_props);
 
-    columnNames.clear();
+    QStringList columnNames;
     columnNames << "Property"
                 << "Type"
                 << QString("a%0").arg(QChar(0x2080))
@@ -299,9 +322,33 @@ void GasMixEditor::updateCurrentView()
 
     table_calc->verticalHeader()->setVisible(false);
 
+    updateGasTable();
+    updateProperties();
+    updateCalculatedProperties();
+}
+
+
+void GasMixEditor::updateGasTable()
+{
+    GasMixture* dbi = dbm->getGasMixture(currentIndex);
+
+    int no_gases = dbi->getNoGases();
+
+    table_gases->clearContents();
+    table_gases->setRowCount(no_gases+1);
+
+    if(_mixtureRow)
+    {
+        disconnect(_mixtureRow, SIGNAL(dataChanged()), this, SLOT(onRowDataChanged()));
+        delete _mixtureRow;
+    }
+
+    _mixtureRow = new DBEGasMixtureRow(*table_gases, dbi);
+
+    connect(_mixtureRow, SIGNAL(dataChanged()), SLOT(onRowDataChanged()));
 
     // table gases
-    for(int i = 0; i< no_gases; i++)
+    /*for(int i = 0; i< no_gases; i++)
     {
         QTableWidgetItem* item1 = new QTableWidgetItem(dbi->getGas(i)->name);
         QTableWidgetItem* item2 = new QTableWidgetItem(QString("%0").arg(dbi->getX(i)));
@@ -309,24 +356,47 @@ void GasMixEditor::updateCurrentView()
 
         item1->setFlags(Qt::ItemIsEnabled);
         item2->setFlags(Qt::ItemIsEnabled);
-        item3->setFlags(Qt::ItemIsEnabled);        
+        item3->setFlags(Qt::ItemIsEnabled);
         table_gases->setItem(i,0,item1);
         table_gases->setItem(i,1,item2);
         table_gases->setItem(i,2,item3);
         table_gases->setRowHeight(i,20);
-    }
+    }*/
+}
 
+
+void GasMixEditor::updateProperties()
+{
+    GasMixture* dbi = dbm->getGasMixture(currentIndex);
 
     // table properaties
     int k = 0;
 
-    showPropertyInRow(dbi->L, k++);
-    showPropertyInRow(dbi->gamma_eqn, k++);
-    showPropertyInRow(dbi->therm_cond, k++);
+    while(!_tableRows.isEmpty())
+    {
+        DBETableRowElement *row = _tableRows.takeFirst();
+        disconnect(row, SIGNAL(dataChanged()), this, SLOT(onRowDataChanged()));
+        delete row;
+    }
 
+    QStringList types = Property::eqTypeList;
+    types.removeLast();
+
+    _tableRows.push_back(DBETableRowElement::buildTableRow(*table_props, dbi->L, types, k++));
+    _tableRows.push_back(DBETableRowElement::buildTableRow(*table_props, dbi->gamma_eqn, types, k++));
+    _tableRows.push_back(DBETableRowElement::buildTableRow(*table_props, dbi->therm_cond, types, k++));
+
+    for(auto row : _tableRows)
+        connect(row, SIGNAL(dataChanged()), SLOT(onRowDataChanged()));
+}
+
+
+void GasMixEditor::updateCalculatedProperties()
+{
+    GasMixture* dbi = dbm->getGasMixture(currentIndex);
 
     // table calculated properties (from GasMixture::functions)
-    k = 0;
+    int k = 0;
 
     QTableWidgetItem* item1 = new QTableWidgetItem("molar_mass");
     QTableWidgetItem* item2 = new QTableWidgetItem(QString("%0").arg(dbi->molar_mass));
@@ -462,3 +532,11 @@ void GasMixEditor::updateCurrentView()
     table_calc->setRowHeight(k, 20);
     k++;
 }
+
+
+void GasMixEditor::onRowDataChanged()
+{
+    DbEditorWidget::onValueEdited("");
+    _rowDataChanged = true;
+}
+

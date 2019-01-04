@@ -272,7 +272,15 @@ SOURCES += \
     calculations/standarddeviation.cpp \
     gui/utils/plotzoomer.cpp \
     signal/processing/plugins/transfer.cpp \
-    gui/utils/mrundetailswidget.cpp
+    gui/utils/mrundetailswidget.cpp \
+    gui/utils/exportoverwritedialog.cpp \
+    gui/databaseEditor/dbelementnamedialog.cpp \
+    gui/databaseEditor/tablerowelement.cpp \
+    gui/databaseEditor/gasmixturerow.cpp \
+    gui/databaseEditor/liisettingsnamedialog.cpp \
+    gui/analysisTools/tools/measurementlist.cpp \
+    calculations/models/htm_musikhin.cpp \
+    gui/utils/flowlayout.cpp
 
 
 HEADERS  += \
@@ -480,7 +488,16 @@ HEADERS  += \
     calculations/standarddeviation.h \
     gui/utils/plotzoomer.h \
     signal/processing/plugins/transfer.h \
-    gui/utils/mrundetailswidget.h
+    gui/utils/mrundetailswidget.h \
+    gui/utils/exportoverwritedialog.h \
+    gui/databaseEditor/dbelementnamedialog.h \
+    gui/databaseEditor/tablerowelement.h \
+    gui/databaseEditor/gasmixturerow.h \
+    gui/databaseEditor/liisettingsnamedialog.h \
+    gui/analysisTools/tools/measurementlist.h \
+    gui/analysisTools/tools/measurementlisthelper.h \
+    calculations/models/htm_musikhin.h \
+    gui/utils/flowlayout.h
 
 # include PicoScope/DataAcquisition Code
 # if LIISIM_PICOSCOPE has been defined (see top of this file)

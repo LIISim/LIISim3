@@ -8,6 +8,8 @@
 #include "../core.h"
 #include <iostream>
 #include "../signal/processing/processingchain.h"
+#include "../signal/processing/temperatureprocessingchain.h"
+#include "../signal/processing/plugins/temperaturecalculator.h"
 #include "../settings/mrunsettings.h"
 
 IOcsv::IOcsv(QObject *parent) :  IOBase(parent)
@@ -137,8 +139,10 @@ void IOcsv::exportImplementation(const SignalIORequest &rq)
             MRun* mrun = mrun_list[j];
             QString fullFname;
 
-            // redefine new filename only for single export
-            fullFname = rq.datadir + mrun->getName();
+            if(rq.userData.contains(20) && rq.userData.value(20).toBool())
+                fullFname = rq.datadir + mrun->filename;
+            else
+                fullFname = rq.datadir + mrun->getName();
 
             int noCh = mrun->getNoChannels(Signal::RAW);
 
@@ -173,6 +177,16 @@ void IOcsv::exportImplementation(const SignalIORequest &rq)
 
                 if(e_flag_abs_stdev)
                     writeStdevToCSV(filenameStdevAbs, mrun, Signal::ABS, chID);
+            }
+
+            if(e_flag_tmp)
+            {
+                QString fnTemp = fullFname + ".Temp.T%0.csv";
+
+                for(int i = 0; i < mrun->getNoChannels(Signal::TEMPERATURE); i++)
+                {
+                    writeToCSV(QString(fnTemp).arg(i+1), mrun, Signal::TEMPERATURE, i);
+                }
             }
 
             emit progressUpdate( (float)j/(float) mrun_list.size());
@@ -547,6 +561,8 @@ void IOcsv::writeToCSV(QString fname, MRun *mru, Signal::SType stype, int ChID)
         postproc = e_flag_raw_postproc;
     else if(stype == Signal::ABS)
         postproc = e_flag_abs_postproc;
+    else if(stype == Signal::TEMPERATURE)
+        postproc = e_flag_temp_postproc;
 
     // check if Processing Chain contains an active Multi Signal Average Plugin
     bool msa = mru->getProcessingChain(stype)->containsActiveMSA();
@@ -566,67 +582,101 @@ void IOcsv::writeToCSV(QString fname, MRun *mru, Signal::SType stype, int ChID)
         // TODO: get decimal mark setting from program settings
         // now: use dot (.)
 
-        // write time
-        int noMpoints = mru->sizeAllMpoints();
-
-        // if we are exporting processed signals and
-        // if the processing chain contains an active MSA Plugin
-        // -> write first signal only!
-        if(postproc && msa)
-            noMpoints = 1;
-
-        if(noMpoints == 0)
-            throw LIISimException("CSV-Export canceled: no signal data, mrun: "+mru->getName(), ERR_IO);
-
-        MPoint *mp;
-
-        if(postproc)
-            mp = mru->getPost(0);
-        else
-            mp = mru->getPre(0);
-
-        Signal s = mp->getSignal(ChID, stype);
-
-        // first row is time axis
-        int noDataPointsPerSignal = s.data.size();
-        double t0 = s.start_time;
-        double dt = s.dt;
-
-        //qDebug() << QString::number(s.start_time);
-        emit logMessage("CSV-Export: dt"+QString::number(dt), ERR_IO);
-
-        for(int i=0; i< noDataPointsPerSignal;i++)
+        if(stype == Signal::RAW || stype == Signal::ABS)
         {
-            out << t0 + i*dt <<";";
-        }
-        out << "\n";
+            // write time
+            int noMpoints = mru->sizeAllMpoints();
 
-        // write signal data for each mpoint (one signal per row)
-        for(int i=0; i<noMpoints;i++)
-        {
+            // if we are exporting processed signals and
+            // if the processing chain contains an active MSA Plugin
+            // -> write first signal only!
+            if(postproc && msa)
+                noMpoints = 1;
+
+            if(noMpoints == 0)
+                throw LIISimException("CSV-Export canceled: no signal data, mrun: "+mru->getName(), ERR_IO);
+
+            MPoint *mp;
+
             if(postproc)
-                mp = mru->getPost(i);
+                mp = mru->getPost(0);
             else
-                mp = mru->getPre(i);
+                mp = mru->getPre(0);
 
-            s = mp->getSignal(ChID,stype);
+            Signal s = mp->getSignal(ChID, stype);
 
-           //   qDebug() << ChID << stype << s.data.size();
+            // first row is time axis
+            int noDataPointsPerSignal = s.data.size();
+            double t0 = s.start_time;
+            double dt = s.dt;
 
-            //if(s.data.size() != noDataPointsPerSignal)
-            //    throw LIISimException("CSV-Export canceled: varying signal data size!, mrun: "+mru->getName(), ERR_IO);
-            //if(s.start_time != t0)
-            //    throw LIISimException("CSV-Export canceled: varying signal start time size!, mrun: "+mru->getName(), ERR_IO);
-
-            //TODO:
-            if(s.dt != dt)
-                qWarning() << "Error: dt is varying between Signals (idx:" << i << "): " << dt << " for this signal: " <<s.dt;
-                //throw LIISimException("CSV-Export canceled: varying signal time step!, mrun: "+mru->getName(), ERR_IO);
+            //qDebug() << QString::number(s.start_time);
+            //emit logMessage("CSV-Export: dt"+QString::number(dt), ERR_IO);
 
             for(int i=0; i< noDataPointsPerSignal;i++)
             {
-                out <<s.data.at(i) <<";";
+                out << t0 + i*dt <<";";
             }
+            out << "\n";
+
+            // write signal data for each mpoint (one signal per row)
+            for(int i=0; i<noMpoints;i++)
+            {
+                if(postproc)
+                    mp = mru->getPost(i);
+                else
+                    mp = mru->getPre(i);
+
+                s = mp->getSignal(ChID,stype);
+
+               //   qDebug() << ChID << stype << s.data.size();
+
+                //if(s.data.size() != noDataPointsPerSignal)
+                //    throw LIISimException("CSV-Export canceled: varying signal data size!, mrun: "+mru->getName(), ERR_IO);
+                //if(s.start_time != t0)
+                //    throw LIISimException("CSV-Export canceled: varying signal start time size!, mrun: "+mru->getName(), ERR_IO);
+
+                //TODO:
+                if(s.dt != dt)
+                    qWarning() << "Error: dt is varying between Signals (idx:" << i << "): " << dt << " for this signal: " <<s.dt;
+                    //throw LIISimException("CSV-Export canceled: varying signal time step!, mrun: "+mru->getName(), ERR_IO);
+
+                for(int i=0; i< noDataPointsPerSignal;i++)
+                {
+                    out <<s.data.at(i) <<";";
+                }
+                out << "\n";
+            }
+        }
+        else if(stype == Signal::TEMPERATURE)
+        {
+            Signal signal;
+
+            if(postproc)
+            {
+                TemperatureProcessingChain *tpchain = dynamic_cast<TemperatureProcessingChain*>(mru->getProcessingChain(Signal::TEMPERATURE));
+                TemperatureCalculator* tc = dynamic_cast<TemperatureCalculator*>(tpchain->getPlug(ChID));
+
+                if(tpchain->getPlug(tpchain->noPlugs()-1)->getName() == "Temperature Calculator")
+                    qDebug() << "Error: last plugin is a temperature calculator";
+
+                signal = tpchain->getPlug(tpchain->noPlugs()-1)->processedSignal(ChID, tc->temperatureChannelID());
+            }
+            else
+            {
+                TemperatureProcessingChain *tpchain = dynamic_cast<TemperatureProcessingChain*>(mru->getProcessingChain(Signal::TEMPERATURE));
+                TemperatureCalculator* tc = dynamic_cast<TemperatureCalculator*>(tpchain->getPlug(ChID));
+                signal = tc->processedSignal(ChID, tc->temperatureChannelID());
+            }
+
+            for(int i = 0; i < signal.data.size(); i++)
+                out << signal.start_time + signal.dt * i << ";";
+
+            out << "\n";
+
+            for(int i = 0; i < signal.data.size(); i++)
+                out << signal.data.at(i) << ";";
+
             out << "\n";
         }
 

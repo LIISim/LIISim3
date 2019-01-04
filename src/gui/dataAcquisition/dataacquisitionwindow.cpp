@@ -828,15 +828,12 @@ void DataAcquisitionWindow::saveCircularBuffer()
         qDebug() << "ID" << runSettingsWidget->cbMRunGroup->currentData().toInt() << "Title" << group->title();
     }
 
-    QString runname = exportSettingsWidget->runName();
-    exportSettingsWidget->generateRunName();
+    MRun *run = new MRun(exportSettingsWidget->getRunname(), channelCount, group);
 
-    MRun *run = new MRun(runname, channelCount, group);
-
-    run->setLiiSettings(liiSettings);
-    run->setDescription(runSettingsWidget->leDescription->toPlainText());
-    run->setFilter(runSettingsWidget->cbFilter->currentText());
-    run->setLaserFluence(runSettingsWidget->getLaserFluence());
+    run->setLiiSettings(liiSettings, true);
+    run->setDescription(runSettingsWidget->leDescription->toPlainText(), true);
+    run->setFilter(runSettingsWidget->cbFilter->currentText(), true);
+    run->setLaserFluence(runSettingsWidget->getLaserFluence(), true);
     run->userDefinedParameters = runSettingsWidget->getParameterList();
 
     if(runSettingsWidget->lecw->isIOEnabled())
@@ -871,7 +868,7 @@ void DataAcquisitionWindow::saveCircularBuffer()
             {
                 run->setPSRange(channelCounter, PicoScopeCommon::PSRangeToDouble(Core::instance()->psSettings->range(channel)));
                 run->setPSOffset(channelCounter, Core::instance()->psSettings->offset(channel));
-                run->setPmtGainVoltage(channelCounter, gain);
+                run->setPmtGainVoltage(channelCounter, gain, true);
                 if(Core::instance()->devManager->getAnalogInputIsValid())
                     run->setPmtReferenceGainVoltage(channelCounter, Core::instance()->devManager->getAnalogInputAverageValue(i+1));
                 channelCounter++;
@@ -898,9 +895,7 @@ void DataAcquisitionWindow::saveCircularBuffer()
             if(Core::instance()->psSettings->range(channel) > range)
                 range = Core::instance()->psSettings->range(channel);
     }
-    run->setPSRange(range);
     run->setPSCoupling(Core::instance()->psSettings->coupling());
-    run->setPSOffset(Core::instance()->psSettings->offset(PSChannel::A)); //TODO
     run->setPSCollectionTime(Core::instance()->psSettings->collectionTime());
     run->setPSPresample(Core::instance()->psSettings->presamplePercentage());
     run->setPSSampleInterval(Core::instance()->psSettings->sampleInterval());
@@ -990,9 +985,6 @@ void DataAcquisitionWindow::runBlock()
     {
         // stop streaming
         picoscope->stopStreaming();
-        // refresh filename if checkbox is checked
-        exportSettingsWidget->autoRefresh();
-
         picoscope->run();
 
 #ifdef PICOSCOPE_TEST_MODE
@@ -1012,15 +1004,13 @@ void DataAcquisitionWindow::runBlock()
         qDebug() << "ID" << runSettingsWidget->cbMRunGroup->currentData().toInt() << "Title" << group->title();
     }
 
-    MRun *run = new MRun(exportSettingsWidget->runName(), chCount, group);
-    exportSettingsWidget->generateRunName();
+    MRun *run = new MRun(exportSettingsWidget->getRunname(), chCount, group);
 
-    run->setLiiSettings(liiSettings);
-    run->setDescription(runSettingsWidget->leDescription->toPlainText());
-    run->setFilter(runSettingsWidget->cbFilter->currentText());
-    run->setLaserFluence(runSettingsWidget->getLaserFluence());
+    run->setLiiSettings(liiSettings, true);
+    run->setDescription(runSettingsWidget->leDescription->toPlainText(), true);
+    run->setFilter(runSettingsWidget->cbFilter->currentText(), true);
+    run->setLaserFluence(runSettingsWidget->getLaserFluence(), true);
     run->userDefinedParameters = runSettingsWidget->getParameterList();
-
     run->setAcquisitionMode("RunBlockTest");
 
     if(runSettingsWidget->lecw->isIOEnabled())
@@ -1054,7 +1044,7 @@ void DataAcquisitionWindow::runBlock()
             {
                 run->setPSRange(channelCounter, PicoScopeCommon::PSRangeToDouble(Core::instance()->psSettings->range(channel)));
                 run->setPSOffset(channelCounter, Core::instance()->psSettings->offset(channel));
-                run->setPmtGainVoltage(channelCounter, gain);
+                run->setPmtGainVoltage(channelCounter, gain, true);
                 if(Core::instance()->devManager->getAnalogInputIsValid())
                     run->setPmtReferenceGainVoltage(channelCounter, Core::instance()->devManager->getAnalogInputAverageValue(i+1));
                 channelCounter++;
@@ -1081,11 +1071,8 @@ void DataAcquisitionWindow::runBlock()
             if(Core::instance()->psSettings->range(channel) > range)
                 range = Core::instance()->psSettings->range(channel);
     }
-    run->setPSRange(range);
     run->setPSCoupling(Core::instance()->psSettings->coupling());
-    run->setPSOffset(Core::instance()->psSettings->offset(PSChannel::A)); //TODO
     run->setPSCollectionTime(Core::instance()->psSettings->collectionTime());
-    //run->setPSSampleIntervall(Core::instance()->psSettings->sampleIntervall());
     run->setPSPresample(Core::instance()->psSettings->presamplePercentage());
     run->setPSSampleInterval(Core::instance()->psSettings->sampleInterval());
 
@@ -1231,13 +1218,12 @@ void DataAcquisitionWindow::processBlockReady()
         group = Core::instance()->dataModel()->group(runSettingsWidget->cbMRunGroup->currentData().toInt());
     }
 
-    MRun *run = new MRun(exportSettingsWidget->runName(), chCount, group);
-    exportSettingsWidget->autoRefresh();
+    MRun *run = new MRun(exportSettingsWidget->getRunname(), chCount, group);
 
-    run->setLiiSettings(liiSettings);
-    run->setDescription(runSettingsWidget->leDescription->toPlainText());
-    run->setFilter(runSettingsWidget->cbFilter->currentText());
-    run->setLaserFluence(runSettingsWidget->getLaserFluence());
+    run->setLiiSettings(liiSettings, true);
+    run->setDescription(runSettingsWidget->leDescription->toPlainText(), true);
+    run->setFilter(runSettingsWidget->cbFilter->currentText(), true);
+    run->setLaserFluence(runSettingsWidget->getLaserFluence(), true);
     run->userDefinedParameters = runSettingsWidget->getParameterList();
 
     if(blockSequenceWorker.isRunning())
@@ -1276,7 +1262,7 @@ void DataAcquisitionWindow::processBlockReady()
             {
                 run->setPSRange(channelCounter, PicoScopeCommon::PSRangeToDouble(Core::instance()->psSettings->range(channel)));
                 run->setPSOffset(channelCounter, Core::instance()->psSettings->offset(channel));
-                run->setPmtGainVoltage(channelCounter, gain);
+                run->setPmtGainVoltage(channelCounter, gain, true);
                 if(Core::instance()->devManager->getAnalogInputIsValid())
                     run->setPmtReferenceGainVoltage(channelCounter, Core::instance()->devManager->getAnalogInputAverageValue(i+1));
                 channelCounter++;
@@ -1303,9 +1289,7 @@ void DataAcquisitionWindow::processBlockReady()
             if(picoscopeSettings->range(channel) > range)
                 range = picoscopeSettings->range(channel);
     }
-    run->setPSRange(range);
     run->setPSCoupling(picoscopeSettings->coupling());
-    run->setPSOffset(picoscopeSettings->offset(PSChannel::A)); //TODO
     run->setPSCollectionTime(picoscopeSettings->collectionTime());
     run->setPSSampleInterval(picoscopeSettings->sampleInterval());
     run->setPSPresample(picoscopeSettings->presamplePercentage());
@@ -1418,10 +1402,8 @@ void DataAcquisitionWindow::processBlockProcessingFinished(MRun *run)
     // check if autosaving data is enabled
     if(exportSettingsWidget->autoSave())
     {
-
         // generate export information
         SignalIORequest rq = exportSettingsWidget->generateExportRequest(run, exportSettingsWidget->saveStdev());
-
         // save signal data
         Core::instance()->getSignalManager()->exportSignalsManager(rq);
     }
@@ -1664,20 +1646,15 @@ void DataAcquisitionWindow::signalSpinnerChanged(int value)
             }
         }
 
-        if(selectedRun->psRange() != PSRange::NONE)
+        double range = 0.0;
+
+        for(int i = 1; i <= selectedRun->getNoChannels(Signal::RAW); i++)
+            range = selectedRun->psRange(i);
+
+        if(range != 0.0)
         {
-            switch(selectedRun->psRange())
-            {
-            case PSRange::R50mV:    signalPlot->setYView(-0.055,  0.055);   break;
-            case PSRange::R100mV:   signalPlot->setYView(-0.11,   0.11);    break;
-            case PSRange::R200mV:   signalPlot->setYView(-0.22,   0.22);    break;
-            case PSRange::R500mV:   signalPlot->setYView(-0.55,   0.55);    break;
-            case PSRange::R1V:      signalPlot->setYView(-1.1,    1.1);     break;
-            case PSRange::R2V:      signalPlot->setYView(-2.1,    2.1);     break;
-            case PSRange::R5V:      signalPlot->setYView(-5.1,    5.1);     break;
-            case PSRange::R10V:     signalPlot->setYView(-10.1,   10.1);    break;
-            case PSRange::R20V:     signalPlot->setYView(-20.1,   20.1);    break;
-            }
+           range += range / 10;
+           signalPlot->setYView(-range, range);
         }
         else
         {

@@ -51,6 +51,8 @@ void HTM_Mansmann::initModelVariables()
 
 double HTM_Mansmann::calculateEvaporation(double T, double dp)
 {
+    if(!useEvaporation) return 0.0;
+
     //return HeatTransferModel::calculateBaseEvaporation(T, dp);
     return material.H_v(T) * material.molar_mass_v(T) * this->calculateMassLossEvap(T, dp);
 }
@@ -58,6 +60,8 @@ double HTM_Mansmann::calculateEvaporation(double T, double dp)
 
 double HTM_Mansmann::calculateConduction(double T, double dp)
 {
+    if(!useConduction) return 0.0;
+
     double T_g = process.T_g;
 
     //return HeatTransferModel::calculateBaseConduction(T, dp);
@@ -74,6 +78,7 @@ double HTM_Mansmann::calculateConduction(double T, double dp)
 
 double HTM_Mansmann::calculateMassLossEvap(double T, double dp)
 {
+    if(!useEvaporation) return 0.0;
     //return HeatTransferModel::calculateBaseMassLossEvap(T, dp);
      return 0.0;
 
@@ -87,6 +92,7 @@ double HTM_Mansmann::calculateMassLossEvap(double T, double dp)
 
 double HTM_Mansmann::calculateRadiation(double T, double dp)
 {
+    if(!useRadiation) return 0.0;
    //return HeatTransferModel::calculateBaseRadiation(T, dp);
     return Constants::pi
             * dp * dp

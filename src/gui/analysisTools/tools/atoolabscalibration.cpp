@@ -102,6 +102,7 @@ AToolAbsCalibration::AToolAbsCalibration(QWidget *parent) : SignalPlotTool(paren
 
     // add visualization plot
     calPlot  = new BasePlotWidgetQwt;
+    calPlot->setXAxisNonTimeType(true);
     calPlot->setZoomMode(BasePlotWidgetQwt::PLOT_PAN);
     calPlot->setPlotAxisTitles("Wavelength / nm", "Intensity / -");
     calPlot->setMaxLegendColumns(1);
@@ -443,7 +444,7 @@ void AToolAbsCalibration::processDataInterval()
 }
 
 
-void AToolAbsCalibration::handleSelectedRunsChanged(QList<MRun *> &runs)
+void AToolAbsCalibration::handleSelectedRunsChanged(const QList<MRun *> &runs)
 {
     if(runs.size() <= 0)
     {

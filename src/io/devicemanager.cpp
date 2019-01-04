@@ -3,6 +3,7 @@
 #include "QtConcurrent/QtConcurrent"
 #include "core.h"
 #include <QMutexLocker>
+#include <QMessageBox>
 
 //--- DiscoveryWorker
 
@@ -393,8 +394,8 @@ DeviceManager::DeviceManager(QObject *parent) : QObject(parent), discoveryWorker
     laserAnalogInputEnabled = false;
     laserAnalogOutputEnabled = false;
 
-    averageAnalogIn = false;
-    analogInSampleBufferSize = 1;
+    averageAnalogIn = true;
+    analogInSampleBufferSize = 5;
 
     AOLimitMin = 0.3;
     AOLimitMax = 0.7;
@@ -461,8 +462,16 @@ QList<DAQDevice> DeviceManager::devices()
 void DeviceManager::handleStartup()
 {
     if(Core::instance()->ioSettings->hasEntry("deviceManager", "discoverAtStartup"))
+    {
         if(Core::instance()->ioSettings->value("deviceManager", "discoverAtStartup").toBool())
             discover();
+    }
+    else
+    {
+        Core::instance()->ioSettings->setValue("deviceManager", "discoverAtStartup", true);
+        discover();
+    }
+
     if(Core::instance()->ioSettings->hasEntry("deviceManager", "averageAnalogIn"))
         averageAnalogIn = Core::instance()->ioSettings->value("deviceManager", "averageAnalogIn").toBool();
 
@@ -546,43 +555,61 @@ void DeviceManager::stopAnalogOUT()
 {
     MSG_DEBUG("stopAnalogOUT()");
 
-    int ret;
-
-    analogOutputWorker.threadShouldStop = true;
-    int terminationCounter = 10;
-    while(analogOutputWorker.isRunning())
+    try
     {
-        terminationCounter--;
-        QThread::msleep(10);
-        if(terminationCounter == 0)
-            analogOutputWorker.terminate();
-    }
+        int ret;
 
-    for(int i = 0; i < analogOut.size(); i++)
-    {
-        if(analogOut[i].taskHandle != 0)
+        analogOutputWorker.threadShouldStop = true;
+        int terminationCounter = 10;
+        while(analogOutputWorker.isRunning())
         {
-            ret = DAQmxStopTask(analogOut[i].taskHandle);
-            if(ret != 0)
-            {
-                if(ret > 0)
-                    MSG_WARN(QString("DAQmxStopTask: ").append(DAQmxErrorAsString(ret)).append(" for %0").arg(i));
-                else
-                    MSG_ERR(QString("DAQmxStopTask: ").append(DAQmxErrorAsString(ret)).append(" for %0").arg(i));
-            }
-            ret = DAQmxClearTask(analogOut[i].taskHandle);
-            if(ret != 0)
-            {
-                if(ret > 0)
-                    MSG_WARN(QString("DAQmxClearTask: ").append(DAQmxErrorAsString(ret)).append(" for %0").arg(i));
-                else
-                    MSG_ERR(QString("DAQmxClearTask: ").append(DAQmxErrorAsString(ret)).append(" for %0").arg(i));
-            }
-            analogOut[i].taskHandle = 0;
+            terminationCounter--;
+            QThread::msleep(10);
+            if(terminationCounter == 0)
+                analogOutputWorker.terminate();
         }
+
+        for(int i = 0; i < analogOut.size(); i++)
+        {
+            if(analogOut[i].taskHandle != 0)
+            {
+                ret = DAQmxStopTask(analogOut[i].taskHandle);
+                if(ret != 0)
+                {
+                    if(ret > 0)
+                        MSG_WARN(QString("DAQmxStopTask: ").append(DAQmxErrorAsString(ret)).append(" for %0").arg(i));
+                    else
+                        MSG_ERR(QString("DAQmxStopTask: ").append(DAQmxErrorAsString(ret)).append(" for %0").arg(i));
+                }
+                ret = DAQmxClearTask(analogOut[i].taskHandle);
+                if(ret != 0)
+                {
+                    if(ret > 0)
+                        MSG_WARN(QString("DAQmxClearTask: ").append(DAQmxErrorAsString(ret)).append(" for %0").arg(i));
+                    else
+                        MSG_ERR(QString("DAQmxClearTask: ").append(DAQmxErrorAsString(ret)).append(" for %0").arg(i));
+                }
+                analogOut[i].taskHandle = 0;
+            }
+        }
+
+        setAnalogOutputEnabled(false);
+    }
+    catch(std::exception e)
+    {
+        QMessageBox msgBox;
+        msgBox.setText(QString("An exception occured while shutting down the analog output.\nReason: %0\nType:%1\nPlease save the log file or note the exception reason/type.").arg(e.what()).arg(typeid(e).raw_name()));
+        msgBox.exec();
+        MSG_ERR(QString("An exception occured while shutting down the analog output. Reason: %0 Type:%1").arg(e.what()).arg(typeid(e).name()));
+    }
+    catch(...)
+    {
+        QMessageBox msgBox;
+        msgBox.setText("An unknown exception occured while shutting down the analog output.\nPlease save the log file.");
+        msgBox.exec();
+        MSG_ERR("An unknown exception occured while shutting down the analog output.");
     }
 
-    setAnalogOutputEnabled(false);
     MSG_DEBUG("analogOut stopped");
 }
 
@@ -788,45 +815,62 @@ void DeviceManager::stopAnalogIN()
 {
     MSG_DEBUG("stopAnalogIN()");
 
-    analogInputWorker.threadShouldStop = true;
-    int terminationCounter = 10;
-    while(analogInputWorker.isRunning())
+    try
     {
-        //qDebug() << "terminationCounter analogIn =" << terminationCounter;
-        QThread::msleep(10);
-        if(terminationCounter == 0)
-            analogInputWorker.terminate();
-        terminationCounter--;
-    }
-
-    for(int i = 0; i < analogIn.size(); i++)
-    {
-        int ret;
-        if(analogIn[i].taskHandle != 0)
+        analogInputWorker.threadShouldStop = true;
+        int terminationCounter = 10;
+        while(analogInputWorker.isRunning())
         {
-            ret = DAQmxStopTask(analogIn[i].taskHandle);
-            if(ret != 0)
-            {
-                if(ret > 0)
-                    MSG_WARN(QString("DAQmxStopTask: ").append(DAQmxErrorAsString(ret)).append(" for %0").arg(i));
-                else
-                    MSG_ERR(QString("DAQmxStopTask: ").append(DAQmxErrorAsString(ret)).append(" for %0").arg(i));
-            }
-            ret = DAQmxClearTask(analogIn[i].taskHandle);
-            if(ret != 0)
-            {
-                if(ret > 0)
-                    MSG_WARN(QString("DAQmxClearTask: ").append(DAQmxErrorAsString(ret)).append(" for %0").arg(i));
-                else
-                    MSG_ERR(QString("DAQmxClearTask: ").append(DAQmxErrorAsString(ret)).append(" for %0").arg(i));
-            }
-            analogIn[i].taskHandle = 0;
+            //qDebug() << "terminationCounter analogIn =" << terminationCounter;
+            QThread::msleep(10);
+            if(terminationCounter == 0)
+                analogInputWorker.terminate();
+            terminationCounter--;
         }
-    }
-    MSG_DEBUG("analog input stopped");
 
-    setAnalogInputEnabled(false);
-    emit analogInputReset();
+        for(int i = 0; i < analogIn.size(); i++)
+        {
+            int ret;
+            if(analogIn[i].taskHandle != 0)
+            {
+                ret = DAQmxStopTask(analogIn[i].taskHandle);
+                if(ret != 0)
+                {
+                    if(ret > 0)
+                        MSG_WARN(QString("DAQmxStopTask: ").append(DAQmxErrorAsString(ret)).append(" for %0").arg(i));
+                    else
+                        MSG_ERR(QString("DAQmxStopTask: ").append(DAQmxErrorAsString(ret)).append(" for %0").arg(i));
+                }
+                ret = DAQmxClearTask(analogIn[i].taskHandle);
+                if(ret != 0)
+                {
+                    if(ret > 0)
+                        MSG_WARN(QString("DAQmxClearTask: ").append(DAQmxErrorAsString(ret)).append(" for %0").arg(i));
+                    else
+                        MSG_ERR(QString("DAQmxClearTask: ").append(DAQmxErrorAsString(ret)).append(" for %0").arg(i));
+                }
+                analogIn[i].taskHandle = 0;
+            }
+        }
+        MSG_DEBUG("analog input stopped");
+
+        setAnalogInputEnabled(false);
+        emit analogInputReset();
+    }
+    catch(std::exception e)
+    {
+        QMessageBox msgBox;
+        msgBox.setText(QString("An exception occured while shutting down the analog input.\nReason: %0\nType:%1\nPlease save the log file or note the exception reason/type.").arg(e.what()).arg(typeid(e).raw_name()));
+        msgBox.exec();
+        MSG_ERR(QString("An exception occured while shutting down the analog input. Reason: %0 Type:%1").arg(e.what()).arg(typeid(e).name()));
+    }
+    catch(...)
+    {
+        QMessageBox msgBox;
+        msgBox.setText("An unknown exception occured while shutting down the analog input.\nPlease save the log file.");
+        msgBox.exec();
+        MSG_ERR("An unknown exception occured while shutting down the analog input.");
+    }
 }
 
 

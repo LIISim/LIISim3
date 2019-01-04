@@ -40,7 +40,7 @@ class AToolAbsCalibration : public SignalPlotTool
         double xStart;
         double xEnd;
 
-        virtual void handleSelectedRunsChanged(QList<MRun *> &runs);
+        virtual void handleSelectedRunsChanged(const QList<MRun *> &runs);
 
         virtual void onToolActivation();
 

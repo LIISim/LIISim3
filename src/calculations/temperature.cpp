@@ -165,7 +165,7 @@ double Temperature::getEmBySource(double lambda_m, Material& material, QString s
  * @param material
  * @return
  */
-double Temperature::calcDrudeEm(int lambda, Material& material)
+double Temperature::calcDrudeEm(int lambda, Material material)
 {
     // check if spectroscopic material contains drude parameters
    if(!material.omega_p.available || !material.tau.available)

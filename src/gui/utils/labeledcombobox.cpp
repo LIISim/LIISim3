@@ -1,6 +1,8 @@
 #include "labeledcombobox.h"
 #include "../../database/databasecontent.h"
 
+const QString LabeledComboBox::identifier_fromRun = "-> from current Run";
+
 /**
  * @brief LabeledComboBox::LabeledComboBox
  * @param parent parent widget (default = 0)
@@ -42,6 +44,7 @@ void LabeledComboBox::init(bool hStretch)
 {
     useDataBaseContent = false;
     initDbContent = false;
+    fromRunEntryEnabled = false;
     dbc = NULL;
 
     layMainH = new QHBoxLayout;
@@ -77,12 +80,11 @@ void LabeledComboBox::setDatabaseContent(QList<DatabaseContent*> *d)
  */
 DatabaseContent* LabeledComboBox::getSelectedDbContent()
 {
-
     if(!useDataBaseContent)
         return NULL;
 
     // return NULL pointer if no selection has been made !!!
-    if(choices->currentIndex()== -1 || choices->count() == 0)
+    if(choices->currentIndex()== -1 || choices->count() == 0 || choices->currentText() == identifier_fromRun)
     {
         return NULL;
     }
@@ -112,7 +114,6 @@ QString LabeledComboBox::getCurrentText()
 
 void LabeledComboBox::setCurrentItem(DatabaseContent *dbi)
 {
-
     if(!useDataBaseContent || dbc == NULL || dbi == NULL)
         return;
 
@@ -169,6 +170,19 @@ void LabeledComboBox::clearAll()
 }
 
 
+void LabeledComboBox::enableFromRunEntry(bool enabled)
+{
+    fromRunEntryEnabled = enabled;
+    slot_onDBcontentChanged();
+}
+
+
+bool LabeledComboBox::fromRunSelected()
+{
+    return choices->currentText() == identifier_fromRun;
+}
+
+
 /**
  * @brief reset choices list if the database content has changed
  */
@@ -186,8 +200,6 @@ void LabeledComboBox::slot_onDBcontentChanged()
 
     choices->clear();
 
-
-
     for(int i=0; i<dbc->size();i++)
     {
         choices->addItem(dbc->at(i)->name,dbc->at(i)->filename);
@@ -196,6 +208,9 @@ void LabeledComboBox::slot_onDBcontentChanged()
         if(lastFname == dbc->at(i)->filename)
             lastChoiceIdx = i;
     }
+
+    if(fromRunEntryEnabled)
+        choices->addItem(identifier_fromRun);
 
     // reselect the last index
     if(lastChoiceIdx>= choices->count())

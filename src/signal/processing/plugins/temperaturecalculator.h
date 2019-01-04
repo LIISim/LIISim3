@@ -67,6 +67,8 @@ class TemperatureCalculator : public ProcessingPlugin
 
         Signal::SType getInputSignalType();
 
+        QString getSelectedMaterial() { return selected_material; }
+
     private:
 
         QString method;

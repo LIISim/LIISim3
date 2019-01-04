@@ -53,7 +53,7 @@ public:
      * Subclasses have to implement this method.
      * @param runs List of MRun-IDs
      */
-    virtual void handleSelectedRunsChanged(QList<MRun*>& runs) = 0;
+    virtual void handleSelectedRunsChanged(const QList<MRun*>& runs) = 0;
 
     /**
      * @brief handleSelectedStypeChanged defines what the gui should
@@ -69,7 +69,7 @@ public:
      * Subclasses have to implement this method.
      * @param ch_ids List of selected Channel-IDs
      */
-    virtual void handleSelectedChannelsChanged(QList<int>& ch_ids) = 0;
+    virtual void handleSelectedChannelsChanged(const QList<int>& ch_ids) = 0;
 
     /**
      * @brief toolbarActions returns a list of

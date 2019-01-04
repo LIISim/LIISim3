@@ -7,6 +7,8 @@
 #include "../calculations/standarddeviation.h"
 #include "../general/LIISimException.h"
 
+#include "core.h"
+
 Signal::Signal()
 {
     this->start_time = 0.0;
@@ -293,6 +295,7 @@ Signal Signal::getSection(double startTime, double endTime)
     {
         return signal;
     }
+    signal.start_time = startTime;
 
     signal.data.clear();
 
@@ -307,7 +310,6 @@ Signal Signal::getSection(double startTime, double endTime)
     int idx_end = qFloor( didx );
 
     //qDebug() << "start: " << idx_start << " end" << idx_end;
-
 
     signal.data.resize(idx_end - idx_start); // resize data vector
 
@@ -335,6 +337,86 @@ double Signal::calcRangeAverage(double start, double end)
     avg /= double(dataInterval.data.size());
 
     return avg;
+}
+
+
+double Signal::calcRangeMin(double start, double end)
+{
+    double min = 0.0f;
+
+    Signal dataInterval = getSection(start, end);
+
+    if(!dataInterval.data.isEmpty())
+    {
+        min = dataInterval.data.at(0);
+        for(double value : dataInterval.data)
+            if(value < min)
+                min = value;
+    }
+    return min;
+}
+
+
+double Signal::calcRangeMax(double start, double end)
+{
+    double max = 0.0f;
+
+    Signal dataInterval = getSection(start, end);
+
+    if(!dataInterval.data.isEmpty())
+    {
+        max = dataInterval.data.at(0);
+        for(double value : dataInterval.data)
+            if(value > max)
+                max = value;
+    }
+    return max;
+}
+
+
+double Signal::getTimeAtMaxSignalRange(double start, double end)
+{
+    double max = 0.0f;
+    int max_index = 0;
+
+    Signal dataInterval = getSection(start, end);
+
+    if(!dataInterval.data.isEmpty())
+    {
+        max = dataInterval.data.at(0);
+        for(int i = 0; i < dataInterval.data.size(); i++)
+        {
+            if(dataInterval.data.at(i) > max)
+            {
+                max = dataInterval.data.at(i);
+                max_index = i;
+            }
+        }
+    }
+    return dataInterval.start_time + (dataInterval.dt * max_index);
+}
+
+
+double Signal::getTimeAtMinSignalRange(double start, double end)
+{
+    double min = 0.0f;
+    int min_index = 0;
+
+    Signal dataInterval = getSection(start, end);
+
+    if(!dataInterval.data.isEmpty())
+    {
+        min = dataInterval.data.at(0);
+        for(int i = 0; i < dataInterval.data.size(); i++)
+        {
+            if(dataInterval.data.at(i) < min)
+            {
+                min = dataInterval.data.at(i);
+                min_index = i;
+            }
+        }
+    }
+    return dataInterval.start_time + (dataInterval.dt * min_index);
 }
 
 

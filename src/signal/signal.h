@@ -31,6 +31,10 @@ public:
     Signal getSection(int start, int end=0);
     Signal getSection(double start, double end);
     double calcRangeAverage(double start, double end);
+    double calcRangeMin(double start, double end);
+    double calcRangeMax(double start, double end);
+    double getTimeAtMaxSignalRange(double start, double end);
+    double getTimeAtMinSignalRange(double start, double end);
     QPair<double, double> calcRangeAverageStdev(double start, double end);
 
     double at(double time);

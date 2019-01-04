@@ -26,16 +26,34 @@ class LiiSettingsEditor : public DbEditorWidget
         void showChannels(LIISettings* dbi);
         void showFilters(LIISettings* dbi);
 
+        QList<QTableWidgetItem*> itemsWavelength;
+        QList<QTableWidgetItem*> itemsBandwidth;
+        QList<QTableWidgetItem*> itemsCalibration;
+        QList<QTableWidgetItem*> itemsPmtGain;
+        QList<QTableWidgetItem*> itemsPmtGainFormula;
+        QList<QTableWidgetItem*> itemsOffset;
+
+        QToolButton *buttonAddFilter;
+
+        QList<QToolButton*> _buttonsRemoveFilter;
+
+        QStringList usedIDs;
+
     signals:
 
     public slots:
-
         void initData();
         void onSelectionChanged(const QItemSelection &selection);
         void onApplyChanges();
         void onAddItemToList();
         void onRemoveCurrentSelectionFromList();
 
+private slots:
+    void onChannelItemChanged(QTableWidgetItem *item);
+    void onFilterItemChanged(QTableWidgetItem *item);
+
+    void onButtonAddFilterClicked();
+    void onButtonRemoveFilterClicked();
 
 };
 

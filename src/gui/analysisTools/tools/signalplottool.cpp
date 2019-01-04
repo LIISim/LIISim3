@@ -133,7 +133,7 @@ void SignalPlotTool::handleCurrentRunChanged(MRun *run)
 }
 
 
-void SignalPlotTool::handleSelectedRunsChanged(QList<MRun *> &runs)
+void SignalPlotTool::handleSelectedRunsChanged(const QList<MRun *> &runs)
 {
     updateMRunSelection();
 
@@ -181,7 +181,7 @@ void SignalPlotTool::handleSelectedStypeChanged(Signal::SType stype)
 }
 
 
-void SignalPlotTool::handleSelectedChannelsChanged(QList<int> &ch_ids)
+void SignalPlotTool::handleSelectedChannelsChanged(const QList<int> &ch_ids)
 {
     QList<int> runIds = selectedRunIds();
     for(int i = 0; i < runIds.size();i++)

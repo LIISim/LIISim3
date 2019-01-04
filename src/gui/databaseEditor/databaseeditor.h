@@ -11,6 +11,7 @@
 #include <QTabWidget>
 #include <QStatusBar>
 #include <QLabel>
+#include <QCloseEvent>
 
 class GasEditor;
 class MaterialEditor;
@@ -33,6 +34,9 @@ public:
     explicit DatabaseEditor(QWidget *parent = 0);
 
     void setDatabaseManager(DatabaseManager* dbm);
+
+    bool hasUnsavedChanges();
+
 private:
     DatabaseManager* db_manager;
 
@@ -54,9 +58,7 @@ private:
     SpectrumEditor *spectrumEditor;
     TransmissionEditor *transmissionEditor;
 
-
 signals:
-
     /**
      * @brief request Core to scan the database directory
      * @param databasepath

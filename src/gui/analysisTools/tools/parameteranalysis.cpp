@@ -88,7 +88,11 @@ void ParameterAnalysisUpdater::run()
                     xDataTemp.push_back(mruns.at(runIndex)->userDefinedParameters.value(pa->curves.at(curveIndex)->sourceX.value<QString>()).toDouble());
             }
             // average data (for all signal types)
-            else if(pa->curves.at(curveIndex)->parameterX == pa->identifier_avg_data_1 || pa->curves.at(curveIndex)->parameterX == pa->identifier_avg_data_2)
+            else if(pa->curves.at(curveIndex)->parameterX == pa->identifier_avg_data_1 || pa->curves.at(curveIndex)->parameterX == pa->identifier_avg_data_2
+                    || pa->curves.at(curveIndex)->parameterX == pa->identifier_min_1 || pa->curves.at(curveIndex)->parameterX == pa->identifier_min_2
+                    || pa->curves.at(curveIndex)->parameterX == pa->identifier_max_1 || pa->curves.at(curveIndex)->parameterX == pa->identifier_max_2
+                    || pa->curves.at(curveIndex)->parameterX == pa->identifier_min_time_1 || pa->curves.at(curveIndex)->parameterX == pa->identifier_min_time_2
+                    || pa->curves.at(curveIndex)->parameterX == pa->identifier_max_time_1 || pa->curves.at(curveIndex)->parameterX == pa->identifier_max_time_2)
             {
                 multiSignalX = true;
 
@@ -102,6 +106,22 @@ void ParameterAnalysisUpdater::run()
                             xDataTemp.push_back(signal.calcRangeAverage(pa->xStart, pa->xEnd));
                         else if(pa->curves.at(curveIndex)->parameterX == pa->identifier_avg_data_2)
                             xDataTemp.push_back(signal.calcRangeAverage(pa->xStart1, pa->xEnd1));
+                        else if(pa->curves.at(curveIndex)->parameterX == pa->identifier_min_1)
+                            xDataTemp.push_back(signal.calcRangeMin(pa->xStart, pa->xEnd));
+                        else if(pa->curves.at(curveIndex)->parameterX == pa->identifier_min_2)
+                            xDataTemp.push_back(signal.calcRangeMin(pa->xStart1, pa->xEnd1));
+                        else if(pa->curves.at(curveIndex)->parameterX == pa->identifier_max_1)
+                            xDataTemp.push_back(signal.calcRangeMax(pa->xStart, pa->xEnd));
+                        else if(pa->curves.at(curveIndex)->parameterX == pa->identifier_max_2)
+                            xDataTemp.push_back(signal.calcRangeMax(pa->xStart1, pa->xEnd1));
+                        else if(pa->curves.at(curveIndex)->parameterX == pa->identifier_min_time_1)
+                            xDataTemp.push_back(signal.getTimeAtMinSignalRange(pa->xStart, pa->xEnd) * 1e9);
+                        else if(pa->curves.at(curveIndex)->parameterX == pa->identifier_min_time_2)
+                            xDataTemp.push_back(signal.getTimeAtMinSignalRange(pa->xStart1, pa->xEnd1) * 1e9);
+                        else if(pa->curves.at(curveIndex)->parameterX == pa->identifier_max_time_1)
+                            xDataTemp.push_back(signal.getTimeAtMaxSignalRange(pa->xStart, pa->xEnd) * 1e9);
+                        else if(pa->curves.at(curveIndex)->parameterX == pa->identifier_max_time_2)
+                            xDataTemp.push_back(signal.getTimeAtMaxSignalRange(pa->xStart1, pa->xEnd1) * 1e9);
                     }
                 }
                 catch(LIISimException e)
@@ -178,7 +198,10 @@ void ParameterAnalysisUpdater::run()
                 if(mruns.at(runIndex)->filter().identifier == "no Filter")
                     xDataTemp.push_back(100.0);
                 else
-                    xDataTemp.push_back(mruns.at(runIndex)->filter().identifier.toDouble());
+                {
+                    if(mruns.at(runIndex)->filter().getTransmissions().size() >= pa->curves.at(curveIndex)->sourceChannelX)
+                        xDataTemp.push_back(mruns.at(runIndex)->filter().getTransmissions().at(pa->curves.at(curveIndex)->sourceChannelX-1));
+                }
             }
             // fit scaling factor
             else if(pa->curves.at(curveIndex)->parameterX == pa->identifier_fit_factor)
@@ -221,7 +244,11 @@ void ParameterAnalysisUpdater::run()
                 if(mruns.at(runIndex)->userDefinedParameters.contains(pa->curves.at(curveIndex)->sourceY.value<QString>()))
                     yDataTemp.push_back(mruns.at(runIndex)->userDefinedParameters.value(pa->curves.at(curveIndex)->sourceY.value<QString>()).toDouble());
             }
-            else if(pa->curves.at(curveIndex)->parameterY == pa->identifier_avg_data_1 || pa->curves.at(curveIndex)->parameterY == pa->identifier_avg_data_2)
+            else if(pa->curves.at(curveIndex)->parameterY == pa->identifier_avg_data_1 || pa->curves.at(curveIndex)->parameterY == pa->identifier_avg_data_2
+                    || pa->curves.at(curveIndex)->parameterY == pa->identifier_min_1 || pa->curves.at(curveIndex)->parameterY == pa->identifier_min_2
+                    || pa->curves.at(curveIndex)->parameterY == pa->identifier_max_1 || pa->curves.at(curveIndex)->parameterY == pa->identifier_max_2
+                    || pa->curves.at(curveIndex)->parameterY == pa->identifier_min_time_1 || pa->curves.at(curveIndex)->parameterY == pa->identifier_min_time_2
+                    || pa->curves.at(curveIndex)->parameterY == pa->identifier_max_time_1 || pa->curves.at(curveIndex)->parameterY == pa->identifier_max_time_2)
             {
                 multiSignalY = true;
 
@@ -239,6 +266,22 @@ void ParameterAnalysisUpdater::run()
                         // avg data 2
                         else if(pa->curves.at(curveIndex)->parameterY == pa->identifier_avg_data_2)
                             yDataTemp.push_back(signal.calcRangeAverage(pa->xStart1, pa->xEnd1));
+                        else if(pa->curves.at(curveIndex)->parameterY == pa->identifier_min_1)
+                            yDataTemp.push_back(signal.calcRangeMin(pa->xStart, pa->xEnd));
+                        else if(pa->curves.at(curveIndex)->parameterY == pa->identifier_min_2)
+                            yDataTemp.push_back(signal.calcRangeMin(pa->xStart1, pa->xEnd1));
+                        else if(pa->curves.at(curveIndex)->parameterY == pa->identifier_max_1)
+                            yDataTemp.push_back(signal.calcRangeMax(pa->xStart, pa->xEnd));
+                        else if(pa->curves.at(curveIndex)->parameterY == pa->identifier_max_2)
+                            yDataTemp.push_back(signal.calcRangeMax(pa->xStart1, pa->xEnd1));
+                        else if(pa->curves.at(curveIndex)->parameterY == pa->identifier_min_time_1)
+                            yDataTemp.push_back(signal.getTimeAtMinSignalRange(pa->xStart, pa->xEnd) * 1e9);
+                        else if(pa->curves.at(curveIndex)->parameterY == pa->identifier_min_time_2)
+                            yDataTemp.push_back(signal.getTimeAtMinSignalRange(pa->xStart1, pa->xEnd1) * 1e9);
+                        else if(pa->curves.at(curveIndex)->parameterY == pa->identifier_max_time_1)
+                            yDataTemp.push_back(signal.getTimeAtMaxSignalRange(pa->xStart, pa->xEnd) * 1e9);
+                        else if(pa->curves.at(curveIndex)->parameterY == pa->identifier_max_time_2)
+                            yDataTemp.push_back(signal.getTimeAtMaxSignalRange(pa->xStart1, pa->xEnd1) * 1e9);
                     }
                 }
                 catch(LIISimException e)
@@ -314,7 +357,10 @@ void ParameterAnalysisUpdater::run()
                 if(mruns.at(runIndex)->filter().identifier == "no Filter")
                     yDataTemp.push_back(100.0);
                 else
-                    yDataTemp.push_back(mruns.at(runIndex)->filter().identifier.toDouble());
+                {
+                    if(mruns.at(runIndex)->filter().getTransmissions().size() >= pa->curves.at(curveIndex)->sourceChannelY)
+                        yDataTemp.push_back(mruns.at(runIndex)->filter().getTransmissions().at(pa->curves.at(curveIndex)->sourceChannelY-1));
+                }
             }
             // fit scaling factor
             else if(pa->curves.at(curveIndex)->parameterY == pa->identifier_fit_factor)
@@ -441,6 +487,14 @@ ParameterAnalysis::ParameterAnalysis(QWidget *parent) : SignalPlotTool(parent)
     identifier_avg_data_2               = "average (range 2)";
     identifier_integral_1               = "integral (range 1)";
     identifier_integral_2               = "integral (range 2)";
+    identifier_min_1                    = "min value (range 1)";
+    identifier_min_2                    = "min value (range 2)";
+    identifier_max_1                    = "max value (range 1)";
+    identifier_max_2                    = "max value (range 2)";
+    identifier_min_time_1               = "time at min value (range 1)";
+    identifier_min_time_2               = "time at min value (range 2)";
+    identifier_max_time_1               = "time at max value (range 1)";
+    identifier_max_time_2               = "time at max value (range 2)";
     identifier_fit_factor               = "fit scaling factor";
     identifier_pmt_gain_voltage         = "PMT gain (set) voltage";
     identifier_pmt_reference_voltage    = "PMT gain (measured) voltage";
@@ -455,7 +509,8 @@ ParameterAnalysis::ParameterAnalysis(QWidget *parent) : SignalPlotTool(parent)
 
     SignalPlotTool::horizontalSplitter->addWidget(splitterLeft);
 
-    paramPlot = new BasePlotWidgetQwt;
+    paramPlot = new ParameterVisualization;
+    paramPlot->setXAxisNonTimeType(true);
     paramPlot->setObjectName("AT_PA_PARAMETER_PLOT");
     paramPlot->setZoomMode(BasePlotWidgetQwt::PLOT_PAN);
     paramPlot->setDataTableToolName(m_title);
@@ -660,6 +715,9 @@ ParameterAnalysis::ParameterAnalysis(QWidget *parent) : SignalPlotTool(parent)
     connect(splitterLeft, SIGNAL(splitterMoved(int,int)), SLOT(onSplitterMoved()));
     connect(splitterRight, SIGNAL(splitterMoved(int,int)), SLOT(onSplitterMoved()));
     connect(horizontalSplitter, SIGNAL(splitterMoved(int,int)), SLOT(onSplitterMoved()));
+
+    connect(paramPlot, SIGNAL(plotRepresentationTypeChanged(ParameterVisualization::PlotType)),
+            SLOT(onPlotTypeChanged(ParameterVisualization::PlotType)));
 }
 
 
@@ -675,7 +733,7 @@ void ParameterAnalysis::handleSignalDataChanged()
 }
 
 
-void ParameterAnalysis::handleSelectedRunsChanged(QList<MRun *> &runs)
+void ParameterAnalysis::handleSelectedRunsChanged(const QList<MRun *> &runs)
 {
     SignalPlotTool::handleSelectedRunsChanged(runs);
 
@@ -703,7 +761,7 @@ void ParameterAnalysis::handleCurrentRunChanged(MRun *run)
 }
 
 
-void ParameterAnalysis::handleSelectedChannelsChanged(QList<int>& ch_ids)
+void ParameterAnalysis::handleSelectedChannelsChanged(const QList<int>& ch_ids)
 {
     SignalPlotTool::handleSelectedChannelsChanged(ch_ids);
 }
@@ -1030,11 +1088,9 @@ void ParameterAnalysis::updateColors()
 
         if(!curves.at(i)->ownColor)
         {
-            curves.at(i)->curve->setPen(QPen(curveColor, 1, Qt::DashLine));
-            QwtSymbol *s = new QwtSymbol(QwtSymbol::Ellipse);
-            s->setSize(5);
-            s->setColor(curveColor);
-            curves.at(i)->curve->setSymbol(s);
+            QPen pen(curves.at(i)->curve->pen());
+            pen.setColor(curveColor);
+            curves.at(i)->curve->setPen(pen);
         }
     }
 }
@@ -1063,22 +1119,25 @@ void ParameterAnalysis::updateParameterChoicesX()
         comboboxParameter1->addStringItem(identifier_pmt_reference_voltage);
         comboboxParameter1->addStringItem(identifier_mrun_list);
     }
-    if(comboboxSignalType1->getCurrentText() == identifier_raw || comboboxSignalType1->getCurrentText() == identifier_absolute)
+    if(comboboxSignalType1->getCurrentText() == identifier_raw || comboboxSignalType1->getCurrentText() == identifier_absolute
+            || comboboxSignalType1->getCurrentText() == identifier_temperature)
     {
         comboboxParameter1->clearAll();
         comboboxParameter1->addStringItem(identifier_avg_data_1);
         comboboxParameter1->addStringItem(identifier_avg_data_2);
         comboboxParameter1->addStringItem(identifier_integral_1);
         comboboxParameter1->addStringItem(identifier_integral_2);
-    }
-    if(comboboxSignalType1->getCurrentText() == identifier_temperature)
-    {
-        comboboxParameter1->clearAll();
-        comboboxParameter1->addStringItem(identifier_avg_data_1);
-        comboboxParameter1->addStringItem(identifier_avg_data_2);
-        comboboxParameter1->addStringItem(identifier_integral_1);
-        comboboxParameter1->addStringItem(identifier_integral_2);
-        comboboxParameter1->addStringItem(identifier_fit_factor);
+        comboboxParameter1->addStringItem(identifier_min_1);
+        comboboxParameter1->addStringItem(identifier_min_2);
+        comboboxParameter1->addStringItem(identifier_max_1);
+        comboboxParameter1->addStringItem(identifier_max_2);
+        comboboxParameter1->addStringItem(identifier_min_time_1);
+        comboboxParameter1->addStringItem(identifier_min_time_2);
+        comboboxParameter1->addStringItem(identifier_max_time_1);
+        comboboxParameter1->addStringItem(identifier_max_time_2);
+
+        if(comboboxSignalType1->getCurrentText() == identifier_temperature)
+            comboboxParameter1->addStringItem(identifier_fit_factor);
     }
     if(comboboxSignalType1->getCurrentText() == identifier_udp)
     {
@@ -1111,22 +1170,25 @@ void ParameterAnalysis::updateParameterChoicesY()
         comboboxParameter2->addStringItem(identifier_pmt_reference_voltage);
         comboboxParameter2->addStringItem(identifier_mrun_list);
     }
-    if(comboboxSignalType2->getCurrentText() == identifier_raw || comboboxSignalType2->getCurrentText() == identifier_absolute)
+    if(comboboxSignalType2->getCurrentText() == identifier_raw || comboboxSignalType2->getCurrentText() == identifier_absolute
+            || comboboxSignalType2->getCurrentText() == identifier_temperature)
     {
         comboboxParameter2->clearAll();
         comboboxParameter2->addStringItem(identifier_avg_data_1);
         comboboxParameter2->addStringItem(identifier_avg_data_2);
         comboboxParameter2->addStringItem(identifier_integral_1);
         comboboxParameter2->addStringItem(identifier_integral_2);
-    }
-    if(comboboxSignalType2->getCurrentText() == identifier_temperature)
-    {
-        comboboxParameter2->clearAll();
-        comboboxParameter2->addStringItem(identifier_avg_data_1);
-        comboboxParameter2->addStringItem(identifier_avg_data_2);
-        comboboxParameter2->addStringItem(identifier_integral_1);
-        comboboxParameter2->addStringItem(identifier_integral_2);
-        comboboxParameter2->addStringItem(identifier_fit_factor);
+        comboboxParameter2->addStringItem(identifier_min_1);
+        comboboxParameter2->addStringItem(identifier_min_2);
+        comboboxParameter2->addStringItem(identifier_max_1);
+        comboboxParameter2->addStringItem(identifier_max_2);
+        comboboxParameter2->addStringItem(identifier_min_time_1);
+        comboboxParameter2->addStringItem(identifier_min_time_2);
+        comboboxParameter2->addStringItem(identifier_max_time_1);
+        comboboxParameter2->addStringItem(identifier_max_time_2);
+
+        if(comboboxSignalType2->getCurrentText() == identifier_temperature)
+            comboboxParameter2->addStringItem(identifier_fit_factor);
     }
     if(comboboxSignalType2->getCurrentText() == identifier_udp)
     {
@@ -1151,12 +1213,6 @@ void ParameterAnalysis::updateParameterChoicesY()
 ParameterAnalysisCurve* ParameterAnalysis::buildCurveObject(QString parameterX, QString parameterY, QVariant signalTypeX, QVariant signalTypeY, int channelX, int channelY)
 {
     BasePlotCurve *curve = new BasePlotCurve(QString("Curve %0").arg(curveCounter++));
-    curve->setFixedStyle(true);
-    curve->setPen(QPen(QColor(Qt::black), 1, Qt::DashDotDotLine));
-    QwtSymbol *s = new QwtSymbol(QwtSymbol::Diamond);
-    s->setSize(6);
-    s->setColor(QColor(Qt::black));
-    curve->setSymbol(s);
 
     ParameterAnalysisCurve *pac = new ParameterAnalysisCurve(this);
     pac->curve = curve;
@@ -1167,12 +1223,14 @@ ParameterAnalysisCurve* ParameterAnalysis::buildCurveObject(QString parameterX, 
     pac->sourceChannelX = channelX;
     pac->sourceChannelY = channelY;
 
+    pac->presentationType = paramPlot->getPlotPresentationType();
+    pac->updateStyle();
+
     connect(pac, SIGNAL(visibilityChanged()), SLOT(onPACVisibilityChanged()));
     connect(pac, SIGNAL(colorChanged()), SLOT(onPACColorChanged()));
     connect(pac, SIGNAL(removeRequest(ParameterAnalysisCurve*)), SLOT(removeCurve(ParameterAnalysisCurve*)));
 
     return pac;
-
 }
 
 
@@ -1192,7 +1250,8 @@ void ParameterAnalysis::updateChannelCount()
     if(!selectedRuns().isEmpty())
     {
         if((comboboxSignalType1->getCurrentText() == identifier_settings || comboboxSignalType1->getCurrentText() == identifier_udp)
-                && !(comboboxParameter1->getCurrentText() == identifier_pmt_gain_voltage || comboboxParameter1->getCurrentText() == identifier_pmt_reference_voltage))
+                && !(comboboxParameter1->getCurrentText() == identifier_pmt_gain_voltage || comboboxParameter1->getCurrentText() == identifier_pmt_reference_voltage
+                     || comboboxParameter1->getCurrentText() == identifier_filter))
         {
             comboboxChannelX->addItem("-", 0);
             channelsXValid = true;
@@ -1235,7 +1294,8 @@ void ParameterAnalysis::updateChannelCount()
         }
 
         if((comboboxSignalType2->getCurrentText() == identifier_settings || comboboxSignalType2->getCurrentText() == identifier_udp)
-                && !(comboboxParameter2->getCurrentText() == identifier_pmt_gain_voltage || comboboxParameter2->getCurrentText() == identifier_pmt_reference_voltage))
+                && !(comboboxParameter2->getCurrentText() == identifier_pmt_gain_voltage || comboboxParameter2->getCurrentText() == identifier_pmt_reference_voltage
+                     || comboboxParameter2->getCurrentText() == identifier_filter))
         {
             comboboxChannelY->addItem("-", 0);
             channelsYValid = true;
@@ -1285,10 +1345,9 @@ void ParameterAnalysis::updateChannelCount()
             if(channelYCount > 0)
                 channelsYValid = true;
         }
-
-        if(channelsXValid && channelsYValid)
-            buttonAddToPlot->setEnabled(true);
     }
+
+    buttonAddToPlot->setEnabled(channelsXValid && channelsYValid);
 
     comboboxChannelX->blockSignals(false);
     comboboxChannelY->blockSignals(false);
@@ -1297,9 +1356,23 @@ void ParameterAnalysis::updateChannelCount()
 
 void ParameterAnalysis::onButtonAddToPlotReleased()
 {
-    if(((comboboxParameter1->getCurrentText() == identifier_avg_data_1 || comboboxParameter2->getCurrentText() == identifier_avg_data_1)
-        && (xStart == 0.0 && xEnd == 0.0)) || ((comboboxParameter1->getCurrentText() == identifier_avg_data_2 ||
-        comboboxParameter2->getCurrentText() == identifier_avg_data_2) && (xStart1 == 0.0 && xEnd1 == 0.0)))
+    const QString type1 = comboboxParameter1->getCurrentText();
+    const QString type2 = comboboxParameter2->getCurrentText();
+
+    if(((type1 == identifier_avg_data_1 || type2 == identifier_avg_data_1
+         || type1 == identifier_integral_1 || type2 == identifier_integral_1
+         || type1 == identifier_min_1 || type2 == identifier_min_1
+         || type1 == identifier_max_1 || type2 == identifier_max_1
+         || type1 == identifier_min_time_1 || type2 == identifier_min_time_1
+         || type1 == identifier_max_time_1 || type2 == identifier_max_time_1)
+        && (xStart == 0.0 && xEnd == 0.0)) ||
+        ((type1 == identifier_avg_data_2 || type2 == identifier_avg_data_2
+         || type1 == identifier_integral_2 || type2 == identifier_integral_2
+         || type1 == identifier_min_2 || type2 == identifier_min_2
+         || type1 == identifier_max_2 || type2 == identifier_max_2
+         || type1 == identifier_min_time_2 || type2 == identifier_min_time_2
+         || type1 == identifier_max_time_2 || type2 == identifier_max_time_2)
+        && (xStart1 == 0.0 && xEnd1 == 0.0)))
     {
         QMessageBox msgBox;
         msgBox.setText("Please select a range for average calculation before adding any averaged parameters.");
@@ -1380,9 +1453,23 @@ void ParameterAnalysis::onButtonAddToPlotReleased()
 
 void ParameterAnalysis::onButtonAddAllChannelClicked()
 {
-    if(((comboboxParameter1->getCurrentText() == identifier_avg_data_1 || comboboxParameter2->getCurrentText() == identifier_avg_data_1)
-        && (xStart == 0.0 && xEnd == 0.0)) || ((comboboxParameter1->getCurrentText() == identifier_avg_data_2 ||
-        comboboxParameter2->getCurrentText() == identifier_avg_data_2) && (xStart1 == 0.0 && xEnd1 == 0.0)))
+    const QString type1 = comboboxParameter1->getCurrentText();
+    const QString type2 = comboboxParameter2->getCurrentText();
+
+    if(((type1 == identifier_avg_data_1 || type2 == identifier_avg_data_1
+         || type1 == identifier_integral_1 || type2 == identifier_integral_1
+         || type1 == identifier_min_1 || type2 == identifier_min_1
+         || type1 == identifier_max_1 || type2 == identifier_max_1
+         || type1 == identifier_min_time_1 || type2 == identifier_min_time_1
+         || type1 == identifier_max_time_1 || type2 == identifier_max_time_1)
+        && (xStart == 0.0 && xEnd == 0.0)) ||
+        ((type1 == identifier_avg_data_2 || type2 == identifier_avg_data_2
+         || type1 == identifier_integral_2 || type2 == identifier_integral_2
+         || type1 == identifier_min_2 || type2 == identifier_min_2
+         || type1 == identifier_max_2 || type2 == identifier_max_2
+         || type1 == identifier_min_time_2 || type2 == identifier_min_time_2
+         || type1 == identifier_max_time_2 || type2 == identifier_max_time_2)
+        && (xStart1 == 0.0 && xEnd1 == 0.0)))
     {
         QMessageBox msgBox;
         msgBox.setText("Please select a range for average calculation before adding any averaged parameters.");
@@ -1610,6 +1697,16 @@ void ParameterAnalysis::onSplitterMoved()
 }
 
 
+void ParameterAnalysis::onPlotTypeChanged(ParameterVisualization::PlotType type)
+{
+    for(int i = 0; i < curves.size(); i++)
+    {
+        curves.at(i)->onPlotStyleChanged(type);
+    }
+    paramPlot->plot()->replot();
+}
+
+
 //--- ParameterAnalysisCurve class implementation ---
 
 
@@ -1625,6 +1722,7 @@ ParameterAnalysisCurve::ParameterAnalysisCurve(QObject *parent) : QObject(parent
     visible = true;
     ownColor = false;
     color = QColor(Qt::black);
+    presentationType = ParameterVisualization::LINE_ELLIPSE;
 
     //parameterXudp = false;
     //parameterYudp = false;
@@ -1632,6 +1730,81 @@ ParameterAnalysisCurve::ParameterAnalysisCurve(QObject *parent) : QObject(parent
     connect(buttonVisibility, SIGNAL(clicked(bool)), SLOT(onButtonVisibilityClicked()));
     connect(buttonRemove, SIGNAL(clicked(bool)), SLOT(onButtonRemoveReleased()));
     connect(buttonColor, SIGNAL(clicked(bool)), SLOT(onButtonColorReleased()));
+}
+
+
+void ParameterAnalysisCurve::updateStyle()
+{
+    QwtSymbol* symbol = 0;
+    QPen pen;
+    switch (presentationType)
+    {
+    case ParameterVisualization::LINE_ELLIPSE:
+        curve->setStyle(BasePlotCurve::Lines);
+        pen = curve->pen();
+        pen.setWidthF(1.5);
+        if(ownColor)
+            pen.setColor(color);
+        curve->setPen(pen);
+        symbol = new QwtSymbol(QwtSymbol::Ellipse);
+        symbol->setSize(5);
+        symbol->setColor(curve->pen().color());
+        curve->setSymbol(symbol);
+        break;
+
+    case ParameterVisualization::LINE_CROSSES:
+        curve->setStyle(BasePlotCurve::Lines);
+        pen = curve->pen();
+        pen.setWidthF(1.5);
+        if(ownColor)
+            pen.setColor(color);
+        curve->setPen(pen);
+        symbol = new QwtSymbol(QwtSymbol::Cross);
+        symbol->setSize(12);
+        symbol->setColor(curve->pen().color());
+        curve->setSymbol(symbol);
+        break;
+
+    case ParameterVisualization::LINE:
+        curve->setStyle(BasePlotCurve::Lines);
+        pen = curve->pen();
+        pen.setWidthF(1.5);
+        if(ownColor)
+            pen.setColor(color);
+        curve->setPen(pen);
+        curve->setSymbol(symbol);
+        break;
+
+    case ParameterVisualization::DOTS_SMALL:
+        curve->setStyle(BasePlotCurve::Dots);
+        pen = curve->pen();
+        pen.setWidthF(1.5);
+        if(ownColor)
+            pen.setColor(color);
+        curve->setPen(pen);
+        curve->setSymbol(symbol);
+        break;
+
+    case ParameterVisualization::DOTS_MEDIUM:
+        curve->setStyle(BasePlotCurve::Dots);
+        pen = curve->pen();
+        pen.setWidthF(3.0);
+        if(ownColor)
+            pen.setColor(color);
+        curve->setPen(pen);
+        curve->setSymbol(symbol);
+        break;
+
+    case ParameterVisualization::DOTS_LARGE:
+        curve->setStyle(BasePlotCurve::Dots);
+        pen = curve->pen();
+        pen.setWidthF(5.5);
+        if(ownColor)
+            pen.setColor(color);
+        curve->setPen(pen);
+        curve->setSymbol(symbol);
+        break;
+    }
 }
 
 
@@ -1667,12 +1840,59 @@ void ParameterAnalysisCurve::onColorSelected(const QColor &color)
     ownColor = true;
     this->color = color;
 
-    curve->setPen(QPen(color, 1, Qt::DashDotDotLine));
-    QwtSymbol *s = new QwtSymbol(QwtSymbol::Diamond);
-    s->setSize(6);
-    s->setColor(color);
-    curve->setSymbol(s);
-
     emit colorChanged();
+
+    updateStyle();
+}
+
+
+void ParameterAnalysisCurve::onPlotStyleChanged(ParameterVisualization::PlotType type)
+{
+    presentationType = type;
+
+    updateStyle();
+}
+
+
+// --- Parameter Visualization ---
+
+
+ParameterVisualization::ParameterVisualization(QWidget *parent) : BasePlotWidgetQwt(parent)
+{
+    actionShowDataPAType = new QAction("dots + line");
+    actionShowDataPAType->setCheckable(true);
+    plotTypeActions->addAction(actionShowDataPAType);
+    actionShowDataPAType->trigger();
+}
+
+
+ParameterVisualization::PlotType ParameterVisualization::getPlotPresentationType()
+{
+    return _plotType;
+}
+
+
+void ParameterVisualization::onPlotTypeActionTriggerd(QAction* action)
+{
+    // LINE + ELLIPSE
+    if(action == actionShowDataPAType)
+        _plotType = PlotType::LINE_ELLIPSE;
+    // LINE + CROSSES
+    if(action == actionShowDataPoints)
+        _plotType = PlotType::LINE_CROSSES;
+    // LINE
+    else if(action == actionShowDataLine)
+        _plotType = PlotType::LINE;
+    // DOTS SMALL
+    else if(action == actionShowDataDotsSize1)
+        _plotType = PlotType::DOTS_SMALL;
+    // DOTS MEDIUM
+    else if(action == actionShowDataDotsSize2)
+        _plotType = PlotType::DOTS_MEDIUM;
+    // DOTS LARGE
+    else if(action == actionShowDataDotsSize3)
+        _plotType = PlotType::DOTS_LARGE;
+
+    emit plotRepresentationTypeChanged(_plotType);
 }
 

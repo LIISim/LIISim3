@@ -50,7 +50,7 @@ private:
 
     QList<NotificationCenter*> listeners;
 
-    QList<Message> messageHistory;
+    QList<LogMessage> messageHistory;
 
     NotificationWindow *notificationWindow;
 
@@ -58,7 +58,7 @@ signals:
     /**
      * @brief update Received by the NotificationCenter to update the text.
      */
-    void update();
+    void update(LogMessage msg);
     /**
      * @brief countChanged Emitted if the error/warning count changes.
      * @param warning Warning message count since last reset.

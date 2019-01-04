@@ -617,6 +617,7 @@ void SignalPlotWidgetQwt::onShowDataTable()
     if(dataTableWindow == NULL)
     {
         dataTableWindow = new DataTableWidget(&curves, &stdev_curves);
+        dataTableWindow->setXAxisNonTimeType(xAxisNonTimeType);
         dataTableWindow->show();
     }
     QString windowTitle = "";

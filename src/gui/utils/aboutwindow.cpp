@@ -36,8 +36,8 @@ AboutWindow::AboutWindow(QString title) : QWidget(0)
     infoText.append("<td style=\"padding: 5px; margin: 5px;\">");
     infoText.append("R. Mansmann, T. Terheiden, P. Schmidt, J. Menser, T. Dreier,");
     infoText.append(" T. Endres and C. Schulz, ");
-    infoText.append("LIISim: a modular signal processing toolbox for laser-induced incandescence measurements");
-    infoText.append(" <div style=\"white-space: nowrap;\">Appl. Phys. B, DOI&nbsp;10.1007/s00340-018-6934-9</div> (2018)");
+    infoText.append("\"LIISim: a modular signal processing toolbox for laser-induced incandescence measurements\"");
+    infoText.append(" Appl. Phys. B <b>124</b>(4), 69 (2018). <div style=\"white-space: nowrap;\">DOI&nbsp;10.1007/s00340-018-6934-9</div>");
     infoText.append("</tr></td></table>");
 
     infoText.append("View at publisher: <a href='https://doi.org/10.1007/s00340-018-6934-9'>DOI 10.1007/s00340-018-6934-9</a>");

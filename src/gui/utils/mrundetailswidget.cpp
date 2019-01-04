@@ -29,7 +29,7 @@ MRunDetailsWidget::MRunDetailsWidget(QWidget *parent) : QTreeWidget(parent)
     checkboxOverwrite->setToolTip("If this Option is enabled the "
                                   "Run's settings file will\nbe overwritten "
                                   "on program shutdown.");
-    buttonForceSave = new QPushButton("Force Save", this);
+    buttonForceSave = new QPushButton("Save", this);
     buttonForceSave->setToolTip("Overwrites the current run settings directly, without waiting for program shutdown.");
     setItemWidget(saveSettings, 0, checkboxOverwrite);
     setItemWidget(saveSettings, 1, buttonForceSave);
@@ -148,29 +148,37 @@ void MRunDetailsWidget::setRun(MRun *mrun)
 
         acquisitionMode->setDisabled(true);
         acquisitionMode->setText(1, "");
+        acquisitionMode->setForeground(0, QBrush(Qt::gray));
 
         laserSetpoint->setDisabled(true);
         laserSetpoint->setText(1, "");
+        laserSetpoint->setForeground(0, QBrush(Qt::gray));
 
         laserPosition->setDisabled(true);
         laserPosition->setText(1, "");
+        laserPosition->setForeground(0, QBrush(Qt::gray));
 
         return;
     }
 
-    buttonForceSave->setEnabled(checkboxOverwrite->isChecked());
+    buttonForceSave->setEnabled(!run->getChangedSettings().isEmpty());
+
+    //buttonForceSave->setEnabled(checkboxOverwrite->isChecked());
 
     //acquisition mode
     acquisitionMode->setDisabled(false);
     acquisitionMode->setText(1, run->getAcquisitionMode());
+    acquisitionMode->setForeground(0, QBrush(Qt::black));
 
     //laser setpoint
     laserSetpoint->setDisabled(false);
     laserSetpoint->setText(1, QString::number(run->getLaserSetpoint()));
+    laserSetpoint->setForeground(0, QBrush(Qt::black));
 
     //laser position
     laserPosition->setDisabled(false);
     laserPosition->setText(1, QString::number(run->getLaserPosition()));
+    laserPosition->setForeground(0, QBrush(Qt::black));
 
     connect(run, SIGNAL(dataChanged(int,QVariant)), SLOT(onMRunDataChanged(int,QVariant)));
     connect(run, SIGNAL(destroyed(int)), SLOT(onMRunDestroyed()));
@@ -183,12 +191,21 @@ void MRunDetailsWidget::updateFilter()
     {
         ndFilter->setDisabled(true);
         ndFilter->setBackgroundColor(0, Qt::white);
+        ndFilter->setForeground(0, QBrush(Qt::gray));
         cbNDFilter->clear();
         cbNDFilter->setEnabled(false);
     }
     else
     {
         ndFilter->setDisabled(false);
+        if(run->getChangedSettings().contains(MRun::UserChangableSettingTypes::NDFilter))
+        {
+            ndFilter->setForeground(0, QBrush(QColor("indianred")));
+            if(!buttonForceSave->isEnabled())
+                buttonForceSave->setEnabled(true);
+        }
+        else
+            ndFilter->setForeground(0, QBrush(Qt::black));
         cbNDFilter->setEnabled(true);
 
         cbNDFilter->blockSignals(true);
@@ -232,6 +249,7 @@ void MRunDetailsWidget::updateName()
     if(!run)
     {
         runName->setDisabled(true);
+        runName->setForeground(0, QBrush(Qt::gray));
         editRunName->setText("");
         editRunName->setEnabled(false);
         editRunName->setFrame(false);
@@ -239,6 +257,14 @@ void MRunDetailsWidget::updateName()
     else
     {
         runName->setDisabled(false);
+        if(run->getChangedSettings().contains(MRun::UserChangableSettingTypes::Name))
+        {
+            runName->setForeground(0, QBrush(QColor("indianred")));
+            if(!buttonForceSave->isEnabled())
+                buttonForceSave->setEnabled(true);
+        }
+        else
+            runName->setForeground(0, QBrush(Qt::black));
         editRunName->setEnabled(true);
         editRunName->setFrame(true);
         editRunName->setText(run->name);
@@ -249,9 +275,11 @@ void MRunDetailsWidget::updateName()
 
 void MRunDetailsWidget::updateDescription()
 {
+    editRunDescription->blockSignals(true);
     if(!run)
     {
         runDescription->setDisabled(true);
+        runDescription->setForeground(0, QBrush(Qt::gray));
         editRunDescription->setText("");
         editRunDescription->setEnabled(false);
         editRunDescription->setFrame(false);
@@ -259,11 +287,20 @@ void MRunDetailsWidget::updateDescription()
     else
     {
         runDescription->setDisabled(false);
+        if(run->getChangedSettings().contains(MRun::UserChangableSettingTypes::Description))
+        {
+            runDescription->setForeground(0, QBrush(QColor("indianred")));
+            if(!buttonForceSave->isEnabled())
+                buttonForceSave->setEnabled(true);
+        }
+        else
+            runDescription->setForeground(0, QBrush(Qt::black));
         editRunDescription->setEnabled(true);
         editRunDescription->setFrame(true);
         editRunDescription->setText(run->description());
         editRunDescription->home(false);
     }
+    editRunDescription->blockSignals(false);
 }
 
 
@@ -272,11 +309,20 @@ void MRunDetailsWidget::updateLIISettings()
     if(!run)
     {
         liiSettings->setDisabled(true);
+        liiSettings->setForeground(0, QBrush(Qt::gray));
         cbLiisettings->setEnabled(false);
     }
     else
     {
         liiSettings->setDisabled(false);
+        if(run->getChangedSettings().contains(MRun::UserChangableSettingTypes::LIISettings))
+        {
+            liiSettings->setForeground(0, QBrush(QColor("indianred")));
+            if(!buttonForceSave->isEnabled())
+                buttonForceSave->setEnabled(true);
+        }
+        else
+            liiSettings->setForeground(0, QBrush(Qt::black));
         cbLiisettings->setEnabled(true);
         cbLiisettings->setCurrentText(run->liiSettings().name);
     }
@@ -288,6 +334,7 @@ void MRunDetailsWidget::updateLaserFluence()
     if(!run)
     {
         laserFluence->setDisabled(true);
+        laserFluence->setForeground(0, QBrush(Qt::gray));
         editLaserFluence->setText("");
         editLaserFluence->setEnabled(false);
         editLaserFluence->setFrame(false);
@@ -295,6 +342,10 @@ void MRunDetailsWidget::updateLaserFluence()
     else
     {
         laserFluence->setDisabled(false);
+        if(run->getChangedSettings().contains(MRun::UserChangableSettingTypes::LaserFluence))
+            laserFluence->setForeground(0, QBrush(QColor("indianred")));
+        else
+            laserFluence->setForeground(0, QBrush(Qt::black));
         editLaserFluence->setEnabled(true);
         editLaserFluence->setFrame(true);
         editLaserFluence->setValue(run->laserFluence());
@@ -313,12 +364,23 @@ void MRunDetailsWidget::updatePMTGain()
     if(!run)
     {
         pmtChannelGain->setDisabled(true);
+        pmtChannelGain->setForeground(0, QBrush(Qt::gray));
         pmtChannelMeasured->setDisabled(true);
+        pmtChannelMeasured->setForeground(0, QBrush(Qt::gray));
     }
     else
     {
         pmtChannelGain->setDisabled(false);
+        if(run->getChangedSettings().contains(MRun::UserChangableSettingTypes::PMTChannelGain))
+        {
+            pmtChannelGain->setForeground(0, QBrush(QColor("indianred")));
+            if(!buttonForceSave->isEnabled())
+                buttonForceSave->setEnabled(true);
+        }
+        else
+            pmtChannelGain->setForeground(0, QBrush(Qt::black));
         pmtChannelMeasured->setDisabled(false);
+        pmtChannelMeasured->setForeground(0, QBrush(Qt::black));
 
         QList<int> channelIDs = run->channelIDs(Signal::RAW);
 
@@ -369,8 +431,10 @@ void MRunDetailsWidget::updateSignalIO()
         importDirectory->setDisabled(true);
         importDirectory->setText(1, "");
         importDirectory->setToolTip(1, "");
+        importDirectory->setForeground(0, QBrush(Qt::gray));
 
         loadedFiles->setDisabled(true);
+        loadedFiles->setForeground(0, QBrush(Qt::gray));
     }
     else
     {
@@ -383,8 +447,10 @@ void MRunDetailsWidget::updateSignalIO()
             importDirectory->setDisabled(false);
             importDirectory->setText(1, fi.absolutePath());
             importDirectory->setToolTip(1, fi.absolutePath());
+            importDirectory->setForeground(0, QBrush(Qt::black));
 
             loadedFiles->setDisabled(false);
+            loadedFiles->setForeground(0, QBrush(Qt::black));
             for(SignalFileInfo sfi : fileList)
             {
                 fi = QFileInfo(sfi.filename);
@@ -406,11 +472,20 @@ void MRunDetailsWidget::updateUDP()
     if(!run)
     {
         userDefinedParameters->setDisabled(true);
+        userDefinedParameters->setForeground(0, QBrush(Qt::gray));
         buttonEditUDP->setEnabled(false);
     }
     else
     {
         userDefinedParameters->setDisabled(false);
+        if(run->getChangedSettings().contains(MRun::UserChangableSettingTypes::UserDefinedParameters))
+        {
+            userDefinedParameters->setForeground(0, QBrush(QColor("indianred")));
+            if(!buttonForceSave->isEnabled())
+                buttonForceSave->setEnabled(true);
+        }
+        else
+            userDefinedParameters->setForeground(0, QBrush(Qt::black));
         buttonEditUDP->setEnabled(true);
 
         for(auto udp : run->userDefinedParameters.keys())
@@ -430,7 +505,14 @@ void MRunDetailsWidget::updateUDP()
 void MRunDetailsWidget::onCheckboxOverwriteStateChanged(int state)
 {
     Core::instance()->guiSettings->setValue("rundetails", "overwrite", state == Qt::Checked);
-    emit Core::instance()->guiSettings->settingsChanged();
+    //emit Core::instance()->guiSettings->settingsChanged();
+    if(run)
+    {
+        if(run->getChangedSettings().isEmpty())
+            buttonForceSave->setEnabled(state == Qt::Checked);
+        else
+            buttonForceSave->setEnabled(true);
+    }
 }
 
 
@@ -439,15 +521,8 @@ void MRunDetailsWidget::onButtonForceSaveClicked()
     if(!run)
         return;
 
-    QString dirpath = run->importRequest().runsettings_dirpath;
-    if(dirpath.isEmpty())
-    {
-        dirpath = run->importRequest().datadir;
-        run->importRequest().runsettings_dirpath = run->importRequest().datadir;
-    }
-
-    MRunSettings runsettings(run);
-    runsettings.save(dirpath);
+    if(run->saveCurrentRunSettings())
+        setRun(run);
 }
 
 
@@ -472,11 +547,20 @@ void MRunDetailsWidget::onLineEditingFinished()
         return;
 
     if(QObject::sender() == editRunName)
+    {
         run->setName(editRunName->text());
+        updateName();
+    }
     else if(QObject::sender() == editRunDescription)
+    {
         run->setDescription(editRunDescription->text());
+        updateDescription();
+    }
     else if(QObject::sender() == editLaserFluence)
+    {
         run->setLaserFluence(editLaserFluence->getValue());
+        updateLaserFluence();
+    }
 }
 
 
@@ -570,5 +654,8 @@ void MRunDetailsWidget::onMRunDestroyed()
 void MRunDetailsWidget::onGUISettingsChanged()
 {
     checkboxOverwrite->setChecked(Core::instance()->guiSettings->value("rundetails", "overwrite", false).toBool());
-    buttonForceSave->setEnabled(checkboxOverwrite->isChecked());
+    if(run && !checkboxOverwrite->isChecked())
+        buttonForceSave->setEnabled(!run->getChangedSettings().isEmpty());
+    else
+        buttonForceSave->setEnabled(checkboxOverwrite->isChecked());
 }

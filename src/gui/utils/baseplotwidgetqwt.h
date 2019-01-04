@@ -89,6 +89,8 @@ class BasePlotWidgetQwt : public QWidget
         void setPlotLabelAlignment(int alignment);
         void plotTextLabelVisible(bool visible);
 
+        void setXAxisNonTimeType(bool nonTime);
+
     protected:
 
         // plot
@@ -196,6 +198,8 @@ class BasePlotWidgetQwt : public QWidget
 
         QString dataTableRunName;
         QString dataTableToolName;
+
+        bool xAxisNonTimeType;
 
     private:
         QList<QAction*> m_actions;
@@ -313,7 +317,7 @@ class BasePlotWidgetQwt : public QWidget
         void onChangeScaleTypeLogX(bool log);
         void onChangeScaleTypeLogY(bool log);
 
-        void onPlotTypeActionTriggerd(QAction* action = 0);
+        virtual void onPlotTypeActionTriggerd(QAction* action = 0);
 
 };
 

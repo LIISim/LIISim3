@@ -65,17 +65,16 @@ protected:
     void importStep(MRun* mrun, SignalFileInfoList  fileInfos);
 
 signals:
+    void fileExists(QFileInfo &finfo, int &ret);
 
 public slots:
 
 
 private:
-
     /// @brief message prefix
     QString msgprfx;
 
     bool saveRun(const QString & dirpath, MRun* run);
-
 
     matvar_t* getMRunVar(MRun* run);
 
@@ -84,7 +83,6 @@ private:
     matvar_t* getSignalFieldVar(const Signal & s, int fieldIndex);
 
     matvar_t* getSettingsStruct(MRun* run);
-
 
     matvar_t* getSignalTypeStruct(MRun *run, Signal::SType stype, bool unprocessed, bool processed, bool stdev);
     matvar_t* getSignalStruct(MRun *run, Signal::SType stype, bool processed, int signalID, int channelID, bool stdev);

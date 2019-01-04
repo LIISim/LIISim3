@@ -104,6 +104,7 @@ int main(int argc, char *argv[])
     qRegisterMetaType<QTextCursor>("QTextCursor");
     qRegisterMetaType<QTextCharFormat>("QTextCharFormat");
     qRegisterMetaType<QList<SignalIORequest>>("QList<SignalIORequest>");
+    qRegisterMetaType<LogMessage>("LogMessage");
 
     qInstallMessageHandler(&MsgHandlerBase::handleQtMessage);
 

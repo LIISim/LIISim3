@@ -52,6 +52,7 @@ AToolCalibration::AToolCalibration(QWidget *parent) : SignalPlotTool(parent)
 
     // add visualization plot
     calPlot  = new BasePlotWidgetQwt;
+    calPlot->setXAxisNonTimeType(true);
     calPlot->setZoomMode(BasePlotWidgetQwt::PLOT_PAN);
     calPlot->setDataTableToolName(m_title);
     calPlot->setPlotTitle("Calibration Visualization");

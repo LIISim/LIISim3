@@ -57,6 +57,8 @@ public:
     QRadioButton* dsrb_raw_post;
     QRadioButton* dsrb_abs_pre;
     QRadioButton* dsrb_abs_post;
+    QRadioButton* dsrb_temp_pre;
+    QRadioButton* dsrb_temp_post;
 
     QCheckBox *checkboxRawUnprocessed;
     QCheckBox *checkboxRawProcessed;

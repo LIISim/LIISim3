@@ -26,20 +26,19 @@ void NotificationManager::handleMessage(LIISimMessageType type, const QString &m
     if(type == WARNING)
     {
         warning++;
-        messageHistory.push_back(Message(type, msg));
+        messageHistory.push_back(LogMessage(type, msg));
     }
     else if(type == ERR || type == ERR_IO || type == ERR_CALC || type == ERR_NULL)
     {
         error++;
-        messageHistory.push_back(Message(type, msg));
+        messageHistory.push_back(LogMessage(type, msg));
     }
-    // verbose mode
-    //else
-    //    messageHistory.push_back(Message(type, msg));
+    else
+        return;
 
     emit countChanged(warning, error);
 
-    emit update();
+    emit update(messageHistory.last());
 }
 
 
@@ -74,8 +73,8 @@ void NotificationManager::showNotifications()
 
     if(notificationWindow == nullptr)
     {
-        notificationWindow = new NotificationWindow(&messageHistory);
-        connect(this, SIGNAL(update()), notificationWindow, SLOT(update()), Qt::QueuedConnection);
+        notificationWindow = new NotificationWindow(messageHistory);
+        connect(this, SIGNAL(update(LogMessage)), notificationWindow, SLOT(update(LogMessage)), Qt::QueuedConnection);
     }
 
     if(!notificationWindow->isVisible())
@@ -87,5 +86,5 @@ void NotificationManager::showNotifications()
     if(notificationWindow->isMinimized())
         notificationWindow->showNormal();
 
-    notificationWindow->update();
+    //notificationWindow->update();
 }

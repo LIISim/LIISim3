@@ -34,7 +34,7 @@ public:
 
     static double getEmBySource(double lambda_m, Material& material, QString sourceEm);
 
-    static double calcDrudeEm(int lambda, Material& material);
+    static double calcDrudeEm(int lambda, Material material);
 
     static Signal calcTemperatureFromTwoColor( LIISettings& liiSettings,
                                                Material& material,

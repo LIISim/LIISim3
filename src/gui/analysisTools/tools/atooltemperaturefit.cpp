@@ -8,6 +8,7 @@
 #include <QHeaderView>
 #include <QShortcut>
 #include <QItemSelectionModel>
+#include <QMessageBox>
 
 #include "../../utils/numberlineedit.h"
 
@@ -18,6 +19,14 @@
 #include "../../signal/processing/temperatureprocessingchain.h"
 #include "../../signal/processing/plugins/temperaturecalculator.h"
 
+const QString AToolTemperatureFit::identifier_subgroup = "atool_temperature_fit";
+const QString AToolTemperatureFit::identifier_c = "c";
+const QString AToolTemperatureFit::identifier_temp_start = "temp_start";
+const QString AToolTemperatureFit::identifier_temp_end = "temp_end";
+const QString AToolTemperatureFit::identifier_temp_step_size = "temp_step_size";
+const QString AToolTemperatureFit::identifier_single_curve = "single_curve";
+const QString AToolTemperatureFit::identifier_em_source = "em_source";
+const QString AToolTemperatureFit::identifier_material = "material";
 
 const QString AToolTemperatureFit::identifier_splitterLeftV = "temperature_fit_splitter_left_v";
 const QString AToolTemperatureFit::identifier_splitterRightV = "temperature_fit_splitter_right_v";
@@ -213,12 +222,11 @@ AToolTemperatureFit::AToolTemperatureFit(QWidget *parent) : SignalPlotTool(paren
 
     // buttons (top)
 
-    QAction* clearPlotAction = new QAction("clear plot", this);
+    QPushButton* clearPlotAction = new QPushButton("Clear Plot", this);
     QToolBar* toolbarFit = new QToolBar();
-    toolbarFit->addAction(clearPlotAction);
 
     connect(clearPlotAction,
-            SIGNAL(triggered(bool)),
+            SIGNAL(clicked(bool)),
             SLOT(onClearPlotButtonReleased()));
 
     widgetFitPlotLayout->addWidget(toolbarFit);
@@ -227,6 +235,7 @@ AToolTemperatureFit::AToolTemperatureFit(QWidget *parent) : SignalPlotTool(paren
 
     // add visualization plot
     fitPlot = new BasePlotWidgetQwt;
+    fitPlot->setXAxisNonTimeType(true);
     fitPlot->setObjectName("AT_TF_FIT_PLOT");
     fitPlot->setPlotTitle("Fit Visualization (Spectrum)");
     fitPlot->setZoomMode(BasePlotWidgetQwt::PLOT_PAN);    
@@ -241,12 +250,124 @@ AToolTemperatureFit::AToolTemperatureFit(QWidget *parent) : SignalPlotTool(paren
     For more information please see the manual.");
     fitPlot->plotTextLabelVisible(true);
 
+    checkboxFitPlotAutoScaling = new QCheckBox("Auto-Scale Plot ");
 
+    QList<QAction*> fitPlotActions = fitPlot->toolActions();
+    fitPlotActions.removeAt(1);
+    fitPlotActions.removeAt(1);
+
+    toolbarFit->addWidget(checkboxFitPlotAutoScaling);
+    toolbarFit->addActions(fitPlotActions);
 
     widgetFitPlotLayout->addWidget(fitPlot);
 
+    layoutAddFitPlot = new QHBoxLayout;
+
+    comboboxMultipleCurves = new QComboBox(this);
+    comboboxMultipleCurves->addItem("Single curve", 0);
+    comboboxMultipleCurves->addItem("Intervall", 1);
+    comboboxMultipleCurves->setMinimumWidth(40);
+
+    lineeditTempStart = new NumberLineEdit(NumberLineEdit::DOUBLE, this);
+    lineeditTempStart->setMaximumWidth(60);
+    lineeditTempStart->setMinimumWidth(30);
+    lineeditTempStart->setMinValue(300);
+    lineeditTempStart->setMaxValue(std::numeric_limits<double>::max());
+    lineeditTempEnd = new NumberLineEdit(NumberLineEdit::DOUBLE, this);
+    lineeditTempEnd->setMaximumWidth(60);
+    lineeditTempEnd->setMinimumWidth(30);
+    lineeditTempEnd->setMinValue(300);
+    lineeditTempEnd->setMaxValue(std::numeric_limits<double>::max());
+    lineeditTempStepSize = new NumberLineEdit(NumberLineEdit::DOUBLE, this);
+    lineeditTempStepSize->setMaximumWidth(60);
+    lineeditTempStepSize->setMinimumWidth(30);
+    lineeditTempStepSize->setMinValue(0);
+    lineeditTempStepSize->setMaxValue(std::numeric_limits<double>::max());
+    lineeditC = new NumberLineEdit(NumberLineEdit::DOUBLE, this);
+    lineeditC->setMaximumWidth(60);
+    lineeditC->setMinimumWidth(30);
+    lineeditC->setMinValue(0.0f);
+    lineeditC->setMaxValue(std::numeric_limits<double>::max());
+    comboboxMaterial = new MaterialComboBox(this);
+    comboboxMaterial->disconnectFromGlobal();
+    comboboxMaterial->enableFromRunEntry();
+    comboboxMaterial->setMinimumWidth(40);
+    comboboxEmSource = new QComboBox(this);
+    comboboxEmSource->addItem("function");
+    comboboxEmSource->addItem("values");
+    comboboxEmSource->addItem("from Drude theory");
+    comboboxEmSource->setToolTip("Select which E(m) values should be used for calculation \n"
+                                 " - E(m) is defined in Material (.txt) files \n"
+                                 " - Em: single values are provided for each center wavelength \n"
+                                 " - Em_func: wavelength dependent function \n"
+                                 " - from Drude theory: E(m) is calculated from plasma frequency (omega_p) and relaxation time (tau) \n"
+                                 "Please see the User Guide for further information");
+    comboboxEmSource->setMinimumWidth(40);
+    buttonAddOwnFitPlot = new QPushButton("Add to plot", this);
+
+    connect(comboboxMultipleCurves, SIGNAL(currentIndexChanged(int)), SLOT(onComboboxMultipleCurvesIndexChanged()));
+    connect(buttonAddOwnFitPlot, SIGNAL(clicked(bool)), SLOT(onButtonAddOwnFitPlotClicked()));
+
+    connect(lineeditC, SIGNAL(editingFinished()), SLOT(onLineEditValueChanged()));
+    connect(lineeditTempStart, SIGNAL(editingFinished()), SLOT(onLineEditValueChanged()));
+    connect(lineeditTempEnd, SIGNAL(editingFinished()), SLOT(onLineEditValueChanged()));
+    connect(lineeditTempStepSize, SIGNAL(editingFinished()), SLOT(onLineEditValueChanged()));
+    connect(comboboxEmSource, SIGNAL(currentIndexChanged(int)), SLOT(onLineEditValueChanged()));
+    connect(comboboxMultipleCurves, SIGNAL(currentIndexChanged(int)), SLOT(onLineEditValueChanged()));
+
+    FlowLayout *flayoutFitPlot = new FlowLayout;
+    QHBoxLayout *layout;
+
+    layout = new QHBoxLayout;
+    layout->setSpacing(3);
+    layout->addWidget(new QLabel("Plot planck curve:"));
+    layout->addWidget(comboboxMultipleCurves);
+    flayoutFitPlot->addItem(layout);
+
+    layout = new QHBoxLayout;
+    layout->setSpacing(3);
+    layout->addWidget(new QLabel("(Start) Temp:"));
+    layout->addWidget(lineeditTempStart);
+    flayoutFitPlot->addItem(layout);
+
+    layout = new QHBoxLayout;
+    layout->setSpacing(3);
+    layout->addWidget(new QLabel("End temp:"));
+    layout->addWidget(lineeditTempEnd);
+    flayoutFitPlot->addItem(layout);
+
+    layout = new QHBoxLayout;
+    layout->setSpacing(3);
+    layout->addWidget(new QLabel("Step size:"));
+    layout->addWidget(lineeditTempStepSize);
+    flayoutFitPlot->addItem(layout);
+
+    layout = new QHBoxLayout;
+    layout->setSpacing(3);
+    layout->addWidget(new QLabel("C:"));
+    layout->addWidget(lineeditC);
+    flayoutFitPlot->addItem(layout);
+
+    layout = new QHBoxLayout;
+    layout->setSpacing(3);
+    layout->addWidget(new QLabel("Material:"));
+    layout->addWidget(comboboxMaterial);
+    flayoutFitPlot->addItem(layout);
+
+    layout = new QHBoxLayout;
+    layout->setSpacing(3);
+    layout->addWidget(new QLabel("E(m) source:"));
+    layout->addWidget(comboboxEmSource);
+    flayoutFitPlot->addItem(layout);
+
+    flayoutFitPlot->addWidget(buttonAddOwnFitPlot);
+    flayoutFitPlot->addWidget(clearPlotAction);
+
+    widgetFitPlotLayout->addLayout(flayoutFitPlot);
+
     verticalSplitterRight->addWidget(widgetFitPlot);
 
+    onComboboxMultipleCurvesIndexChanged();
 
     /******************
      *  BOTTOM RIGHT BOX
@@ -267,8 +388,15 @@ AToolTemperatureFit::AToolTemperatureFit(QWidget *parent) : SignalPlotTool(paren
     settingsLayoutDummy->setLayout(settingsLayout);
 
 
-    QPushButton * resetPlotButton = new QPushButton("clear plot");
-    resetPlotButton->setMaximumWidth(60);
+    QToolBar *toolbarResult = new QToolBar(this);
+    QList<QAction*> resultPlotActions = resultPlot->toolActions();
+    resultPlotActions.removeAt(1);
+    toolbarResult->addActions(resultPlotActions);
+
+    QToolButton *resetPlotButton = new QToolButton(this);
+    resetPlotButton->setText("clear plot");
+
+    toolbarResult->addWidget(resetPlotButton);
 
     connect(resetPlotButton,
             SIGNAL(released()),
@@ -329,11 +457,8 @@ AToolTemperatureFit::AToolTemperatureFit(QWidget *parent) : SignalPlotTool(paren
 #ifdef LIISIM_FULL
     widgetFRSettingsLeftLayout->addWidget(checkBoxBPAnalysis);
 #endif
-
-    widgetFRSettingsLayout->addSpacing(-1);
-
-    widgetFRSettingsLayout->addWidget(resetPlotButton);
-    widgetFRSettingsLayout->setAlignment(resetPlotButton, Qt::AlignRight);
+    widgetFRSettingsLayout->addWidget(toolbarResult);
+    widgetFRSettingsLayout->setAlignment(toolbarResult, Qt::AlignRight);
 
     connect(checkBoxBPAnalysis,
             SIGNAL(stateChanged(int)),
@@ -522,6 +647,8 @@ AToolTemperatureFit::AToolTemperatureFit(QWidget *parent) : SignalPlotTool(paren
     connect(verticalSplitterRight, SIGNAL(splitterMoved(int,int)), SLOT(onSplitterMoved()));
     connect(bottomRightSplitter, SIGNAL(splitterMoved(int,int)), SLOT(onSplitterMoved()));
     connect(horizontalSplitter, SIGNAL(splitterMoved(int,int)), SLOT(onSplitterMoved()));
+
+    connect(checkboxFitPlotAutoScaling, SIGNAL(stateChanged(int)), SLOT(onCheckboxAutoScaleFitPlotStateChanged(int)));
 }
 
 
@@ -881,6 +1008,15 @@ void AToolTemperatureFit::processDataInterval()
 
         // front level display
         fitPlot->registerCurve(curve);
+
+        if(checkboxFitPlotAutoScaling->isChecked())
+        {
+            fitPlot->setZoomMode(BasePlotWidgetQwt::ZOOM_RESET);
+            fitPlot->plot()->updateAxes();
+            QwtInterval i = fitPlot->plot()->axisInterval(QwtPlot::yLeft);
+            fitPlot->plot()->setAxisScale(QwtPlot::yLeft, i.minValue(), i.maxValue() + (std::abs(i.maxValue()) / 5));
+            fitPlot->plot()->updateAxes();
+        }
     }
     else
     {
@@ -1342,7 +1478,7 @@ void AToolTemperatureFit::handleSignalDataChanged()
 }
 
 
-void AToolTemperatureFit::handleSelectedRunsChanged(QList<MRun *> &runs)
+void AToolTemperatureFit::handleSelectedRunsChanged(const QList<MRun *> &runs)
 {
 
     comboboxMRun->blockSignals(true);
@@ -1413,7 +1549,7 @@ void AToolTemperatureFit::onCellClicked(int row, int col)
 
         //qDebug() << "AToolTemperatureFit: Row selected: " << row << " - T: " << T << " - C: " << C;
 
-        QString name = QString("IT: %0 ").arg(it_selection);
+        QString name = QString("IT: %0 ").arg(it_selection+1);
 
         QString sourceEm = currentMRun->tempMetadata.value(tempChannelID).sourceEm;
 
@@ -1448,7 +1584,7 @@ void AToolTemperatureFit::onFitResultTabChanged(int idx)
 }
 
 
-void AToolTemperatureFit::handleSelectedChannelsChanged(QList<int>& ch_ids)
+void AToolTemperatureFit::handleSelectedChannelsChanged(const QList<int> &ch_ids)
 {
     SignalPlotTool::handleSelectedChannelsChanged(ch_ids);
 
@@ -1813,5 +1949,145 @@ void AToolTemperatureFit::onGuiSettingsChanged()
         bottomRightSplitter->restoreState(position.toByteArray());
     if(Core::instance()->guiSettings->getSplitterPosition(identifier_splitterMiddleH, position))
         horizontalSplitter->restoreState(position.toByteArray());
+
+    checkboxFitPlotAutoScaling->setChecked(Core::instance()->guiSettings->value("fitTools", "autoScaleFitPlot", false).toBool());
+
+    lineeditC->setValue(Core::instance()->guiSettings->value(identifier_subgroup, identifier_c, 0.01f).toDouble());
+    lineeditTempStart->setValue(Core::instance()->guiSettings->value(identifier_subgroup, identifier_temp_start, 2000.0f).toDouble());
+    lineeditTempEnd->setValue(Core::instance()->guiSettings->value(identifier_subgroup, identifier_temp_end, 2500.0f).toDouble());
+    lineeditTempStepSize->setValue(Core::instance()->guiSettings->value(identifier_subgroup, identifier_temp_step_size, 50.0f).toDouble());
+
+    int idx = comboboxEmSource->findText(Core::instance()->guiSettings->value(identifier_subgroup, identifier_em_source).toString());
+    if(idx != -1)
+        comboboxEmSource->setCurrentIndex(idx);
+
+    if(Core::instance()->guiSettings->value(identifier_subgroup, identifier_single_curve, true).toBool())
+        comboboxMultipleCurves->setCurrentIndex(0);
+    else
+        comboboxMultipleCurves->setCurrentIndex(1);
+}
+
+
+void AToolTemperatureFit::onCheckboxAutoScaleFitPlotStateChanged(int state)
+{
+    Core::instance()->guiSettings->setValue("fitTools", "autoScaleFitPlot", state==Qt::Checked?true:false);
+}
+
+
+void AToolTemperatureFit::onComboboxMultipleCurvesIndexChanged()
+{
+    bool enable = comboboxMultipleCurves->currentData().toInt() == 1;
+    lineeditTempEnd->setEnabled(enable);
+    lineeditTempStepSize->setEnabled(enable);
+}
+
+
+void AToolTemperatureFit::onButtonAddOwnFitPlotClicked()
+{
+    buttonAddOwnFitPlot->setEnabled(false);
+
+    if(comboboxMultipleCurves->currentData().toInt() == 1)
+    {
+        if(lineeditTempStart->getValue() < lineeditTempEnd->getValue() || lineeditTempStepSize->getValue() > 0)
+        {
+            double C = lineeditC->getValue();
+            Material material;
+            if(comboboxMaterial->fromRunSelected())
+            {
+                MRun *run = currentMRun;
+                if(run)
+                {
+                    TemperatureProcessingChain *tpc = dynamic_cast<TemperatureProcessingChain*>(run->getProcessingChain(Signal::TEMPERATURE));
+                    TemperatureCalculator *tc = dynamic_cast<TemperatureCalculator*>(tpc->getPlug(tempChannelID-1));
+                    if(tc)
+                    {
+                        if(tc->getSelectedMaterial() != "global")
+                        {
+                            QList<DatabaseContent*> materials = *Core::instance()->getDatabaseManager()->getMaterials();
+                            for(int k = 0; k < materials.size(); k++)
+                            {
+                                if(tc->getSelectedMaterial() == materials.at(k)->name)
+                                    material = Material(*Core::instance()->getDatabaseManager()->getMaterial(k));
+                            }
+                        }
+                    }
+                    else
+                    {
+                        QMessageBox msgBox;
+                        msgBox.setText("No valid temperature calculator available to fetch the material from.\n"
+                                       "Please calculate a temperature signal.");
+                        msgBox.exec();
+                        buttonAddOwnFitPlot->setEnabled(true);
+                        return;
+                    }
+                }
+                else
+                {
+                    QMessageBox msgBox;
+                    msgBox.setText("No run selected. Please select a run with a valid temperature signal.");
+                    msgBox.exec();
+                    buttonAddOwnFitPlot->setEnabled(true);
+                    return;
+                }
+            }
+            else
+                material = *dynamic_cast<Material*>(comboboxMaterial->getSelectedDbContent());
+
+            for(double T = lineeditTempStart->getValue(); T < lineeditTempEnd->getValue(); T += lineeditTempStepSize->getValue())
+            {
+                QString name = QString("Temp %0, C %1, %2, E(m): %3").arg(T).arg(C).arg(material.name).arg(comboboxEmSource->currentText());
+
+                plotPlanckCurve(T, C, material, comboboxEmSource->currentText(), name);
+            }
+        }
+    }
+    else
+    {
+        double T = lineeditTempStart->getValue();
+        double C = lineeditC->getValue();
+        Material material = *dynamic_cast<Material*>(comboboxMaterial->getSelectedDbContent());
+        QString name = QString("Temp %0, C %1, %2, E(m): %3").arg(T).arg(C).arg(material.name).arg(comboboxEmSource->currentText());
+
+        plotPlanckCurve(T, C, material, comboboxEmSource->currentText(), name);
+    }
+    fitPlot->plotTextLabelVisible(false);
+    buttonAddOwnFitPlot->setEnabled(true);
+}
+
+
+void AToolTemperatureFit::plotPlanckCurve(double T, double C, Material mat, QString sourceEm, QString name)
+{
+    curve_fit = new BasePlotCurve(QString("%0 T=%1; C=%2").arg(name).arg(T).arg(C));
+    curve_fit->setPen(QPen(Qt::black, 1, Qt::DashLine));
+
+    QVector<double> xData, yData;
+
+    for (int k = 300; k <= 1000; k++)
+    {
+        double lambda = double(k);
+        double intensity = Temperature::calcPlanckIntensity(lambda*1E-9, T, C, mat, sourceEm);
+        xData.append(lambda);
+        yData.append(intensity);
+    }
+
+    curve_fit->setSamples(xData,yData);
+    fitPlot->registerCurve(curve_fit);
+}
+
+
+void AToolTemperatureFit::onLineEditValueChanged()
+{
+    if(QObject::sender() == lineeditC)
+        Core::instance()->guiSettings->setValue(identifier_subgroup, identifier_c, lineeditC->getValue());
+    else if(QObject::sender() == lineeditTempStart)
+        Core::instance()->guiSettings->setValue(identifier_subgroup, identifier_temp_start, lineeditTempStart->getValue());
+    else if(QObject::sender() == lineeditTempEnd)
+        Core::instance()->guiSettings->setValue(identifier_subgroup, identifier_temp_end, lineeditTempEnd->getValue());
+    else if(QObject::sender() == lineeditTempStepSize)
+        Core::instance()->guiSettings->setValue(identifier_subgroup, identifier_temp_step_size, lineeditTempStepSize->getValue());
+    else if(QObject::sender() == comboboxEmSource)
+        Core::instance()->guiSettings->setValue(identifier_subgroup, identifier_em_source, comboboxEmSource->currentText());
+    else if(QObject::sender() == comboboxMultipleCurves)
+        Core::instance()->guiSettings->setValue(identifier_subgroup, identifier_single_curve, comboboxMultipleCurves->currentData().toInt() == 0);
 }
 

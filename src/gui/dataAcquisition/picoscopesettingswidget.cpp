@@ -303,29 +303,29 @@ PicoScopeSettingsWidget::PicoScopeSettingsWidget(PicoScopeSettings *psSettings,P
     setCellWidget(8, 2, widgetCT);
     setSpan(8, 2, 1, 2);
 
-    setItem(9, 0, new QTableWidgetItem("Sample Intervall"));
+    setItem(9, 0, new QTableWidgetItem("Sample Interval"));
     item(9, 0)->setFlags(Qt::ItemIsEnabled);
     setSpan(9, 0, 1, 2);
-    cbsampleintervall = new QComboBox;
-    cbsampleintervall->setMaximumWidth(90);
-    setCellWidget(9, 2, cbsampleintervall);
+    cbsampleinterval = new QComboBox;
+    cbsampleinterval->setMaximumWidth(90);
+    setCellWidget(9, 2, cbsampleinterval);
     setSpan(9, 2, 1, 2);
     /*
      * Adding timebase descriptions / values to combo box
      * To add further timebases: calculate timebase according to
      * Picoscope Programmer's Guide, Section 3.7: Timebases
      */
-    cbsampleintervall->addItem("200 ps", 0);
-    cbsampleintervall->addItem("400 ps", 1);
-    cbsampleintervall->addItem("800 ps", 2);
-    cbsampleintervall->addItem("1.6 ns", 3);
-    cbsampleintervall->addItem("3.2 ns", 4);
-    cbsampleintervall->addItem("6.4 ns", 5);
-    cbsampleintervall->addItem("12.8 ns", 6);
-    cbsampleintervall->addItem("19.2 ns", 7);
-    cbsampleintervall->addItem("25.6 ns", 8);
-    cbsampleintervall->addItem("32 ns", 9);
-    cbsampleintervall->addItem("38.4 ns", 10);
+    //cbsampleinterval->addItem("200 ps", 0);
+    //cbsampleinterval->addItem("400 ps", 1);
+    cbsampleinterval->addItem("800 ps", 2);
+    cbsampleinterval->addItem("1.6 ns", 3);
+    cbsampleinterval->addItem("3.2 ns", 4);
+    cbsampleinterval->addItem("6.4 ns", 5);
+    cbsampleinterval->addItem("12.8 ns", 6);
+    cbsampleinterval->addItem("19.2 ns", 7);
+    cbsampleinterval->addItem("25.6 ns", 8);
+    cbsampleinterval->addItem("32 ns", 9);
+    cbsampleinterval->addItem("38.4 ns", 10);
 
 
     setItem(10, 0, new QTableWidgetItem("Captures"));
@@ -392,7 +392,7 @@ PicoScopeSettingsWidget::PicoScopeSettingsWidget(PicoScopeSettings *psSettings,P
 
     connect(lecollectiontime, SIGNAL(textEdited(QString)), this, SLOT(collectionTimeChanged(QString)));
     connect(cbcollectiontimemagnitude, SIGNAL(currentIndexChanged(QString)), this, SLOT(collectionTimeChanged(QString)));
-    connect(cbsampleintervall, SIGNAL(currentIndexChanged(int)), this, SLOT(sampleIntervallChanged(int)));
+    connect(cbsampleinterval, SIGNAL(currentIndexChanged(int)), this, SLOT(sampleIntervalChanged(int)));
 
     connect(sbcaptures, SIGNAL(valueChanged(int)), this, SLOT(capturesChanged(int)));
 
@@ -708,9 +708,9 @@ void PicoScopeSettingsWidget::collectionTimeChanged(QString text)
 }
 
 
-void PicoScopeSettingsWidget::sampleIntervallChanged(int index)
+void PicoScopeSettingsWidget::sampleIntervalChanged(int index)
 {
-    psSettings->setTimebase(cbsampleintervall->itemData(index).toInt(), PSSignalSource::UI);
+    psSettings->setTimebase(cbsampleinterval->itemData(index).toInt(), PSSignalSource::UI);
 }
 
 
@@ -869,7 +869,7 @@ void PicoScopeSettingsWidget::updateGUI()
 
     updateCollectionTime(psSettings->collectionTime());
 
-    updateSampleIntervall(psSettings->timebase());
+    updateSampleInterval(psSettings->timebase());
 }
 
 
@@ -977,18 +977,14 @@ void PicoScopeSettingsWidget::updateCollectionTime(double ct)
 }
 
 
-void PicoScopeSettingsWidget::updateSampleIntervall(unsigned int si)
+void PicoScopeSettingsWidget::updateSampleInterval(unsigned int si)
 {
-    int index = cbsampleintervall->findData(si);
+    int index = cbsampleinterval->findData(si);
     if(index >= 0)
     {
-        cbsampleintervall->blockSignals(true);
-        cbsampleintervall->setCurrentIndex(index);
-        cbsampleintervall->blockSignals(false);
-    }
-    else
-    {
-        qDebug() << "Could not set index of sample intervall";
+        cbsampleinterval->blockSignals(true);
+        cbsampleinterval->setCurrentIndex(index);
+        cbsampleinterval->blockSignals(false);
     }
 }
 

@@ -26,9 +26,12 @@ private:
 
     bool useDataBaseContent;
     bool initDbContent;
+    bool fromRunEntryEnabled;
     QList<DatabaseContent*>* dbc;
 
     void init(bool hStretch);
+
+    static const QString identifier_fromRun;
 
 protected:
 
@@ -60,6 +63,9 @@ public:
     QVariant getPluginParamValue() ;
 
     void clearAll();
+
+    void enableFromRunEntry(bool enabled = true);
+    bool fromRunSelected();
 
     QComboBox* choices;
     QHBoxLayout* layMainH;

@@ -19,7 +19,7 @@ Baseline::Baseline(ProcessingChain *parentChain) :   ProcessingPlugin(parentChai
 {
     shortDescription = "Baseline correction\n\
                        Select time range, which is used for calculation of correction factor.\n\
-                       The signal is then substracted by this correction factor.";
+                       The signal is then subtracted by this correction factor.";
 
     // standard values
     operation   = "all signals";

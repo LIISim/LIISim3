@@ -100,7 +100,7 @@ private:
 
     QLineEdit *lecollectiontime;
     QComboBox *cbcollectiontimemagnitude;
-    QComboBox *cbsampleintervall;
+    QComboBox *cbsampleinterval;
     QSpinBox  *sbcaptures;
     QSpinBox  *sbpresample;
 
@@ -141,7 +141,7 @@ private slots:
 
     void couplingChanged(int index);
     void collectionTimeChanged(QString text);
-    void sampleIntervallChanged(int index);
+    void sampleIntervalChanged(int index);
     void capturesChanged(int value);
     void presampleChanged(int value);
     void rangeChanged2(int index);
@@ -157,7 +157,7 @@ private slots:
     void updateCouplingCB(QList<QString> couplingList, int index);
     void updateOffsets();
     void updateCollectionTime(double ct);
-    void updateSampleIntervall(unsigned int si);
+    void updateSampleInterval(unsigned int si);
     void updateCaptures(unsigned int captures);
     void updatePresample(unsigned int percentage);
 

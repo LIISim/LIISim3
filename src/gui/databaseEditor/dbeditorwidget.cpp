@@ -5,7 +5,7 @@
 #include <QDesktopServices>
 #include <QUrl>
 
-DbEditorWidget::DbEditorWidget( QWidget *parent) :  QWidget(parent)
+DbEditorWidget::DbEditorWidget( QWidget *parent) : QWidget(parent), _unsavedChanges(false)
 {
     currentIndex = 0;
     dbm = NULL;
@@ -59,7 +59,11 @@ DbEditorWidget::DbEditorWidget( QWidget *parent) :  QWidget(parent)
 
 
     bOpen = new QPushButton(tr("Open file"));
-    bOpen->setMaximumWidth(100);
+    //bOpen->setMaximumWidth(100);
+
+    labelUnsavedChanges = new QLabel("Unsaved changes", this);
+    labelUnsavedChanges->setStyleSheet("QLabel { color : red }");
+    labelUnsavedChanges->setVisible(false);
 
     bApply = new QPushButton(tr("Apply changes"));
     bApply->setMaximumWidth(100);
@@ -73,7 +77,15 @@ DbEditorWidget::DbEditorWidget( QWidget *parent) :  QWidget(parent)
 
     lay_props->addWidget(lbDescr,1,0, 1, 1);
     lay_props->addWidget(leDescr,1,1, 1, 3);
-    lay_props->addWidget(bApply,1,4);
+
+    QHBoxLayout *layoutSaveChanges = new QHBoxLayout;
+    layoutSaveChanges->addWidget(labelUnsavedChanges);
+    layoutSaveChanges->addWidget(bApply);
+
+    //lay_props->addWidget(labelUnsavedChanges, 1, 4);
+    //lay_props->addWidget(bApply,1,5);
+
+    lay_props->addLayout(layoutSaveChanges, 1, 4);
 
 
     //lay_right_box->addWidget(bOpen,0,Qt::AlignRight);
@@ -115,10 +127,17 @@ void DbEditorWidget::setDatabaseManager(DatabaseManager *dbm)
 }
 
 
+bool DbEditorWidget::hasUnsavedChanges()
+{
+    return _unsavedChanges;
+}
+
+
 void DbEditorWidget::onSelectionChanged(const QItemSelection &selection)
 {
     currentIndex = selection.indexes().first().row();
     bApply->setEnabled(false);
+    labelUnsavedChanges->setVisible(false);
 
     leName->setText(db_data->at(currentIndex)->name);
     leFname->setText(db_data->at(currentIndex)->filename);
@@ -129,6 +148,8 @@ void DbEditorWidget::onSelectionChanged(const QItemSelection &selection)
 void DbEditorWidget::onValueEdited(const QString &)
 {
     bApply->setEnabled(true);
+    labelUnsavedChanges->setVisible(true);
+    _unsavedChanges = true;
 }
 
 
@@ -146,6 +167,8 @@ void DbEditorWidget::onOpenFile()
 void DbEditorWidget::onApplyChanges()
 {
     bApply->setEnabled(false);
+    labelUnsavedChanges->setVisible(false);
+    _unsavedChanges = false;
 }
 
 

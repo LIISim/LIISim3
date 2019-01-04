@@ -4,7 +4,9 @@
 #include <QMessageBox>
 #include <QHeaderView>
 
-GasEditor::GasEditor(QWidget *parent) :  DbEditorWidget(parent)
+#include "dbelementnamedialog.h"
+
+GasEditor::GasEditor(QWidget *parent) :  DbEditorWidget(parent), _rowDataChanged(false), _blockInit(false)
 {
     db_data = NULL;
     defaultFileName = "gases/newGas";
@@ -12,37 +14,12 @@ GasEditor::GasEditor(QWidget *parent) :  DbEditorWidget(parent)
 
     table = new QTableWidget;
     lay_props->addWidget(table,2,0,2,5);
-}
 
-void GasEditor::setDatabaseManager(DatabaseManager *dbm)
-{
-    DbEditorWidget::setDatabaseManager(dbm);
-    db_data = dbm->getGases();
-
-}
-
-void GasEditor::initData()
-{
-    DbEditorWidget::initData();
-}
-
-void GasEditor::onSelectionChanged(const QItemSelection &selection)
-{
-    DbEditorWidget::onSelectionChanged(selection);
-
-    GasProperties* dbi = dbm->getGas(currentIndex);
-
-    // set number of rows
-    int no_props = 4;
-
-    table->clear();
-
-    // setup table
     table->setColumnCount(14);
-    table->setRowCount(no_props);
+    table->setRowCount(4);
 
     table->setColumnWidth(0, 80); // name
-    table->setColumnWidth(1, 80); // type
+    table->setColumnWidth(1, 90); // type
 
     int a;
     for(a = 2; a < 11; a++)
@@ -64,91 +41,82 @@ void GasEditor::onSelectionChanged(const QItemSelection &selection)
                 << QString("a%0").arg(QChar(0x2085))
                 << QString("a%0").arg(QChar(0x2086))
                 << QString("a%0").arg(QChar(0x2087))
-                << QString("a%0").arg(QChar(0x2088))                
+                << QString("a%0").arg(QChar(0x2088))
                 << "Unit" << "Equation" << "Source";
     table->setHorizontalHeaderLabels(columnNames);
 
     table->verticalHeader()->setVisible(false);
+}
 
-    int k = 0;
+void GasEditor::setDatabaseManager(DatabaseManager *dbm)
+{
+    DbEditorWidget::setDatabaseManager(dbm);
+    db_data = dbm->getGases();
+}
 
-    showPropertyInRow(dbi->alpha_T, k++);
-    showPropertyInRow(dbi->C_p_mol, k++);
-    showPropertyInRow(dbi->molar_mass, k++);
-    showPropertyInRow(dbi->zeta, k++);
+void GasEditor::initData()
+{
+    if(!_blockInit && !(_rowDataChanged = false))
+        DbEditorWidget::initData();
+}
 
+void GasEditor::onSelectionChanged(const QItemSelection &selection)
+{
+    if(_rowDataChanged)
+    {
+        int ret = QMessageBox::warning(this, "LIISim3 Database Editor",
+                  "The currently selected gas entry has been modified.\n"
+                  "Do you want to apply your changes?",
+                  QMessageBox::Save | QMessageBox::Discard, QMessageBox::Discard);
+
+        if(ret == QMessageBox::Save)
+        {
+            _blockInit = true;
+            onApplyChanges();
+            _blockInit = false;
+        }
+        _rowDataChanged = false;
+    }
+
+    DbEditorWidget::onSelectionChanged(selection);
+
+    updateView();
 }
 
 
-void GasEditor::showPropertyInRow(const Property &prop, int row)
+void GasEditor::updateView()
 {
-    QTableWidgetItem* item1 = new QTableWidgetItem(prop.name);
-    QTableWidgetItem* item2 = new QTableWidgetItem(prop.type);
-    QTableWidgetItem* item3 = new QTableWidgetItem(prop.unit);
-    QTableWidgetItem* item4 = new QTableWidgetItem(prop.source);
+    GasProperties* dbi = dbm->getGas(currentIndex);
 
-    item1->setToolTip(prop.description);
-    item2->setToolTip(prop.description);
-    item3->setToolTip(prop.description);
-    item4->setToolTip(prop.source);
+    table->clearContents();
 
-    item1->setFlags(Qt::ItemIsEnabled);
-    item2->setFlags(Qt::ItemIsEnabled);
-    item3->setFlags(Qt::ItemIsEnabled);
-    item4->setFlags(Qt::ItemIsEnabled);
+    int k = 0;
 
-    if(prop.inFile == false)
+    while(!_tableRows.isEmpty())
     {
-        QColor tcolor;
-
-        if(prop.optional)
-        {
-            item4->setText("Warning: (optional) variable was not defined in file");
-            tcolor = QColor(255,165,0);
-        }
-        else
-        {
-            item4->setText("Error: variable was not defined in file");
-            tcolor = QColor(Qt::red);
-        }
-
-        item1->setTextColor(tcolor);
-        item2->setTextColor(tcolor);
-        item4->setTextColor(tcolor);
-    }
-    else if(prop.available == false)
-    {
-        item4->setText("Warning: type and values are not set (not used during calculation)");
-
-        item1->setTextColor(QColor(255,165,0));
-        item2->setTextColor(QColor(255,165,0));
-        item4->setTextColor(QColor(255,165,0));
+        DBETableRowElement *row = _tableRows.takeFirst();
+        disconnect(row, SIGNAL(dataChanged()), this, SLOT(onRowDataChanged()));
+        delete row;
     }
 
-    table->setItem(row, 0, item1); // name
-    table->setItem(row, 1, item2); // type
+    QStringList types = Property::eqTypeList;
+    types.removeLast();
 
-    int a;
-    for(a = 2; a < 11; a++)
-    {
-        QString val = QString("%0").arg(prop.parameter[a-2]);
+    _tableRows.push_back(DBETableRowElement::buildTableRow(*table, dbi->alpha_T, types, k++));
+    connect(_tableRows.last(), SIGNAL(dataChanged()), SLOT(onRowDataChanged()));
+    _tableRows.push_back(DBETableRowElement::buildTableRow(*table, dbi->C_p_mol, types, k++));
+    connect(_tableRows.last(), SIGNAL(dataChanged()), SLOT(onRowDataChanged()));
+    _tableRows.push_back(DBETableRowElement::buildTableRow(*table, dbi->molar_mass, types, k++));
+    connect(_tableRows.last(), SIGNAL(dataChanged()), SLOT(onRowDataChanged()));
+    _tableRows.push_back(DBETableRowElement::buildTableRow(*table, dbi->zeta, types, k++));
+    connect(_tableRows.last(), SIGNAL(dataChanged()), SLOT(onRowDataChanged()));
+}
 
-        QTableWidgetItem* item_a = new QTableWidgetItem(val);
-        item_a->setToolTip(prop.description);
-        item_a->setFlags(Qt::ItemIsEnabled);
-        item_a->setToolTip(val);
 
-        table->setItem(row, a, item_a); // a_i
-    }
-
-    table->setItem(row, a++, item3); // unit
-
-    QLabel* eqw = dbm->eqList->defaultEq(prop.type);
-    table->setCellWidget(row, a++, eqw); // equation
-
-    table->setItem(row, a++, item4); // source
-
-    table->setRowHeight(row, eqw->size().height());
+void GasEditor::onRowDataChanged()
+{
+    DbEditorWidget::onValueEdited("");
+    _rowDataChanged = true;
 }
 
 
@@ -161,19 +129,19 @@ void GasEditor::onApplyChanges()
     }
     DbEditorWidget::onApplyChanges();
 
+    for(int i = 0; i < _tableRows.size(); i++)
+        _tableRows.at(i)->savePropertyParameters();
 
     GasProperties* modgas = dbm->getGas(currentIndex);
 
     QString oldfname = modgas->filename;
     QString newfname = leFname->text();
 
-
-
     try
     {
         for(int i=0;i<db_data->size();i++)
         {
-            if(newfname != oldfname && db_data->at(i)->filename == newfname  )
+            if(newfname != oldfname && db_data->at(i)->filename == newfname)
                 throw LIISimException("Invalid filename, file already exists: "+newfname);
         }
 
@@ -182,7 +150,7 @@ void GasEditor::onApplyChanges()
         modgas->description = leDescr->text().toLatin1().data();
         qDebug() << modgas->filename << " " << modgas->name;
         dbm->modifiedContent(modgas);
-        QString msg = "apllied changes to: "+newfname;
+        QString msg = QString("Applied changes to: %0 (%1)").arg(modgas->name).arg(modgas->filename);
         MSG_STATUS(msg);
 
         if(newfname != oldfname){
@@ -191,13 +159,13 @@ void GasEditor::onApplyChanges()
             MSG_STATUS(msg);
         }
 
-        //   update View;
+        //update view
         QModelIndex idx = listModel->index(currentIndex);
         listModel->setData(idx,leName->text());
         emit signal_gasesUpdated();
-    }catch(LIISimException e)
+    }
+    catch(LIISimException e)
     {
-
         MSG_STATUS(e.what());
         qDebug() << e.what();
     }
@@ -206,30 +174,29 @@ void GasEditor::onApplyChanges()
 
 void GasEditor::onAddItemToList()
 {
-
-    DbEditorWidget::onAddItemToList();
-
-    // get filename
-    QString fname = getValidDefaultFileName();
-  //  QString fname = defaultFileName+".txt";
-
-    try{
-         GasProperties* g = new GasProperties;
-         g->name = defaultName.toLatin1().data();
-         g->filename =  fname.toLatin1().data();
-
-         dbm->addContentToDB(g);
-         MSG_STATUS("added: "+fname);
-
-    }catch(LIISimException e)
+    DBElementNameDialog nameDialog(typeid(GasProperties), this);
+    nameDialog.setWindowTitle("Enter name for new gas database entry");
+    nameDialog.setDefault("DefaultGas");
+    if(nameDialog.exec() == 1)
     {
-        MSG_STATUS(e.what());
-        qDebug() << e.what();
-        butAdd->setEnabled(true);
-    }
+        try
+        {
+            GasProperties *gp = new GasProperties;
+            gp->name = nameDialog.getName();
+            gp->filename = nameDialog.getUniqueFilename(Core::instance()->generalSettings->databaseDirectory().toLatin1().data(), ".txt");
 
-    emit signal_gasesUpdated();
-    butAdd->setEnabled(true);
+            dbm->addContentToDB(gp);
+
+            MSG_STATUS(QString("Database entry added: %0").arg(gp->name));
+        }
+        catch(LIISimException &e)
+        {
+            MSG_STATUS(e.what());
+            MSG_ERR(e.what());
+        }
+
+        emit signal_gasesUpdated();
+    }
 }
 
 void GasEditor::onRemoveCurrentSelectionFromList()

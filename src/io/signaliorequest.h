@@ -78,6 +78,7 @@ public:
     * - 18: csv-auto import flag: [true=] copy raw data to absolute data
     * - 19: xml import: defines how to handle existing data
     *       (0: clear, 1: add data, ignore psteps, 2: add data, overwrite psteps)
+    * - 20: export flag: [true=] use filenameBase for export
     *
     * - 25: export flag: [true=] save POSTprocessed temperature data
     * - 26: export flag: [true=] save standard deviation temperature data

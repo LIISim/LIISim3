@@ -307,7 +307,7 @@ void IOBase::onImportSetupFinished()
 
             if(m_initialRequest.itype != SignalIOType::XML)
             {
-                mrun->setLiiSettings(getLIISettings( irq ));
+                mrun->setLiiSettings(getLIISettings( irq ), true);
 
                 if(!irq.runsettings_dirpath.isEmpty())
                 {

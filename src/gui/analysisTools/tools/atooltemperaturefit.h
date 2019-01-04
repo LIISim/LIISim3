@@ -8,6 +8,8 @@
 #include <QTableWidget>
 
 #include "../../utils/baseplotspectrogramwidgetqwt.h"
+#include "../../utils/materialcombobox.h"
+#include "../../utils/flowlayout.h"
 
 class NumberLineEdit;
 
@@ -37,6 +39,8 @@ class AToolTemperatureFit : public SignalPlotTool
         BasePlotWidgetQwt *resultPlot;
         BasePlotWidgetQwt *covarPlot;
         BasePlotCurve *curve_fit;
+
+        QCheckBox *checkboxFitPlotAutoScaling;
 
         BasePlotSpectrogramWidgetQwt *statisticsPlot;
         BasePlotCurve *curve_stats;
@@ -77,6 +81,25 @@ class AToolTemperatureFit : public SignalPlotTool
         QSplitter *verticalSplitterRight;
         QSplitter *bottomRightSplitter;
 
+        QHBoxLayout *layoutAddFitPlot;
+        QComboBox *comboboxMultipleCurves;
+        NumberLineEdit *lineeditTempStart;
+        NumberLineEdit *lineeditTempEnd;
+        NumberLineEdit *lineeditTempStepSize;
+        NumberLineEdit *lineeditC;
+        MaterialComboBox *comboboxMaterial;
+        QComboBox *comboboxEmSource;
+        QPushButton *buttonAddOwnFitPlot;
+
+        static const QString identifier_subgroup;
+        static const QString identifier_c;
+        static const QString identifier_temp_start;
+        static const QString identifier_temp_end;
+        static const QString identifier_temp_step_size;
+        static const QString identifier_single_curve;
+        static const QString identifier_em_source;
+        static const QString identifier_material;
+
         static const QString identifier_splitterLeftV;
         static const QString identifier_splitterRightV;
         static const QString identifier_bottomSplitterH;
@@ -93,13 +116,15 @@ class AToolTemperatureFit : public SignalPlotTool
         Signal getCurrentTChannel(MPoint *mp);
 
         virtual void handleSignalDataChanged();
-        virtual void handleSelectedRunsChanged(QList<MRun *> &runs);
-        virtual void handleSelectedChannelsChanged(QList<int>& ch_ids);
+        virtual void handleSelectedRunsChanged(const QList<MRun *> &runs);
+        virtual void handleSelectedChannelsChanged(const QList<int>& ch_ids);
         virtual void handleSelectedStypeChanged(Signal::SType stype);
 
         virtual void onToolActivation();
 
         QList<int> addedRows;
+
+        void plotPlanckCurve(double T, double C, Material mat, QString sourceEm, QString name);
 
     signals:
 
@@ -144,6 +169,12 @@ class AToolTemperatureFit : public SignalPlotTool
         void onSplitterMoved();
 
         void onGuiSettingsChanged();
+
+        void onCheckboxAutoScaleFitPlotStateChanged(int state);
+
+        void onComboboxMultipleCurvesIndexChanged();
+        void onButtonAddOwnFitPlotClicked();
+        void onLineEditValueChanged();
 
 };
 

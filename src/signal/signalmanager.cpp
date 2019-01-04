@@ -25,6 +25,7 @@
 #include "../io/ioxml.h"
 #include "../../gui/signalEditor/importdialog.h"
 #include "../../gui/signalEditor/exportdialog.h"
+#include "./gui/utils/exportoverwritedialog.h"
 
 #include "mrungroup.h"
 #include "processing/processingtask.h"
@@ -863,4 +864,11 @@ void SignalManager::onIOImportSuccess(SignalIORequest source, SignalFileInfoList
 void SignalManager::onIOImportError(SignalIORequest source, SignalFileInfo file, QString error)
 {
     emit ioImportError(source, file, error);
+}
+
+
+void SignalManager::exportFileDialog(QFileInfo &finfo, int &ret)
+{
+    ExportOverwriteDialog dialog(finfo);
+    ret = dialog.show();
 }

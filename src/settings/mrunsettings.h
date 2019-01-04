@@ -36,7 +36,7 @@ public:
     PSCoupling ps_coupling();
     double ps_offset();
     double ps_collectionTime();
-    double ps_sampleIntervall();
+    double ps_sampleInterval();
     double ps_presample();
 
     double laser_setpoint();

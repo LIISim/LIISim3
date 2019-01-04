@@ -12,6 +12,7 @@
 #include "tools/atoolcalibration.h"
 #include "tools/atooltemperaturefit.h"
 #include "tools/parameteranalysis.h"
+#include "tools/measurementlist.h"
 
 
 const QString AnalysisTools::_identifierSplitterH = "analysisToolsH";
@@ -183,6 +184,8 @@ AnalysisTools::AnalysisTools(QWidget *parent) : QWidget(parent)
     ParameterAnalysis *parameterTool = new ParameterAnalysis;
     addAtool(parameterTool);
 
+    MeasurementList *measurementList = new MeasurementList;
+    addAtool(measurementList);
 
     // connections ...
 
